@@ -320,6 +320,9 @@ nav button.on .icon{stroke-width:2.3}
 .field textarea{min-height:88px;resize:vertical;line-height:1.7}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--sakura-lt)}
 .field .hint{font-size:11px;color:var(--sub);margin-top:5px;padding-left:3px}
+.withbtn{display:flex;gap:8px;align-items:stretch}
+.withbtn input{flex:1;min-width:0}
+.withbtn .btn{flex:none;box-shadow:var(--sh)}
 .two{display:flex;gap:10px}
 .two>*{flex:1;min-width:0}
 
@@ -428,6 +431,7 @@ nav button.on .icon{stroke-width:2.3}
     <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></symbol>
     <symbol id="i-yen" viewBox="0 0 24 24"><path d="M6 4l6 8 6-8M8 14h8M8 18h8M12 12v8"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></symbol>
     <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
     <symbol id="i-note" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.7-9.3-9A5 5 0 0 1 12 6.6 5 5 0 0 1 21.3 11c-1.8 4.3-9.3 9-9.3 9Z"/></symbol>
@@ -591,7 +595,11 @@ nav button.on .icon{stroke-width:2.3}
   <div class="sbody">
     <div class="field">
       <label>施設名 <i>*</i></label>
-      <input type="text" id="e-name" placeholder="例）サウナしきじ" autocomplete="off">
+      <div class="withbtn">
+        <input type="text" id="e-name" placeholder="例）サウナしきじ" autocomplete="off">
+        <button class="btn mizu" id="e-lookup">しらべる</button>
+      </div>
+      <div class="hint">名前を入れて「しらべる」を押すと、住所などが自動で入ります</div>
     </div>
     <div class="field">
       <label>写真</label>
@@ -622,6 +630,7 @@ nav button.on .icon{stroke-width:2.3}
       <div class="field"><label>電話番号</label><input type="tel" id="e-tel" placeholder="054-000-0000"></div>
       <div class="field"><label>ホームページ</label><input type="url" id="e-web" placeholder="ページのアドレス" inputmode="url"></div>
     </div>
+    <div class="field"><label>営業時間</label><input type="text" id="e-hours" placeholder="例）10:00〜24:00"></div>
     <div class="field">
       <label>タグ</label>
       <input type="text" id="e-tags" placeholder="ロウリュ, 外気浴, 24時間">
@@ -909,6 +918,54 @@ const fmtDate = s => {
   return p.length === 3 ? `${+p[1]}月${+p[2]}日 ${p[0]}年` : s;
 };
 
+/* ============ 施設情報の自動しらべ（OpenStreetMap） ============ */
+let lastLookup = 0;
+
+function jpAddress(displayName, addr) {
+  const parts = String(displayName || "").split(",").map(s => s.trim()).filter(Boolean);
+  if (parts.length) parts.shift();               // 先頭は施設名なので落とす
+  const jp = parts.indexOf("日本");
+  if (jp >= 0) parts.splice(jp, 1);
+  const post = (addr && addr.postcode) || "";
+  const rest = parts.filter(s => s !== post).reverse().join("");
+  return (post ? "〒" + post + " " : "") + rest;
+}
+
+async function lookupPlace(name, pref, area) {
+  const gap = 1200 - (Date.now() - lastLookup);   // 相手のサーバに優しく1秒以上あける
+  if (gap > 0) await new Promise(r => setTimeout(r, gap));
+  lastLookup = Date.now();
+
+  const q = [name, area, pref].filter(Boolean).join(" ");
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1"
+            + "&extratags=1&limit=1&accept-language=ja&q=" + encodeURIComponent(q);
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error("network");
+  const rows = await res.json();
+  if (!rows.length) return null;
+
+  const r = rows[0], a = r.address || {}, x = r.extratags || {};
+  const address = jpAddress(r.display_name, a);
+  const charge = String(x.charge || "").match(/\d[\d,]*/);
+  return {
+    address,
+    prefecture: PREF_FLAT.find(p => address.indexOf(p) >= 0) || "",
+    phone: x.phone || x["contact:phone"] || "",
+    website: x.website || x["contact:website"] || "",
+    price: charge ? charge[0].replace(/,/g, "") : "",
+    hours: x.opening_hours || ""
+  };
+}
+
+/* 空いている項目だけを埋める（自分で書いた内容は上書きしない） */
+function fillEmpty(f, d) {
+  let n = 0;
+  for (const k of ["address", "phone", "website", "price", "hours", "prefecture"]) {
+    if (d[k] && !f[k]) { f[k] = d[k]; n++; }
+  }
+  return n;
+}
+
 /* ============ 画像 ============ */
 async function shrink(file, max = 1280, q = 0.82) {
   const bmp = await loadBitmap(file);
@@ -1151,14 +1208,28 @@ async function addFromCatalog(i) {
     toast("すでに登録ずみです"); return;
   }
   const f = {
-    id: uid(), name: c.n, prefecture: c.p, address: c.a || "", phone: "", website: "", price: "",
-    rating: 0, subRatings: {}, photos: [], tags: [], memo: "", visits: [], favorite: false,
-    createdAt: Date.now(), updatedAt: Date.now()
+    id: uid(), name: c.n, prefecture: c.p, address: c.p + (c.a || ""), phone: "", website: "",
+    price: "", hours: "", rating: 0, subRatings: {}, photos: [], tags: [], memo: "",
+    visits: [], favorite: false, createdAt: Date.now(), updatedAt: Date.now()
   };
   try { await Store.put(f); } catch (e) { toast("保存できませんでした"); return; }
   facilities.push(f);
   renderAll();
-  toast(`「${c.n}」を行きたいリストに入れました`);
+  toast(`「${c.n}」を追加。住所をしらべています…`);
+
+  try {
+    const d = await lookupPlace(c.n, c.p, c.a);
+    if (!d) { toast(`「${c.n}」を追加しました（住所は見つからず）`); return; }
+    if (d.address) f.address = d.address;          // 県+市だけの仮住所は上書きしてよい
+    fillEmpty(f, d);
+    f.updatedAt = Date.now();
+    await Store.put(f);
+    renderAll();
+    if (detailId === f.id) openDetail(f.id);
+    toast(`「${c.n}」の住所を入れました`);
+  } catch (e) {
+    toast(`「${c.n}」を追加しました（今は住所をしらべられません）`);
+  }
 }
 
 function renderInfo() {
@@ -1203,7 +1274,11 @@ function openDetail(id) {
     <div class="info">
       ${f.prefecture || f.address ? `<div class="i">${ico("pin")}<span class="v"><span class="k">住所</span>${esc([f.prefecture, f.address].filter(Boolean).join(" "))}
         <br><a href="https://www.google.com/maps/search/?api=1&query=${mapQ}" target="_blank" rel="noopener">地図で開く →</a></span></div>` : ""}
-      ${f.phone ? `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span><a href="tel:${esc(f.phone.replace(/[^0-9+]/g, ""))}">${esc(f.phone)}</a></span></div>` : ""}
+      ${f.phone
+        ? `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span><a href="tel:${esc(f.phone.replace(/[^0-9+]/g, ""))}">${esc(f.phone)}</a></span></div>`
+        : `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span>
+             <a href="https://www.google.com/search?q=${encodeURIComponent(f.name + " " + (f.prefecture || "") + " 電話番号")}" target="_blank" rel="noopener">電話番号をしらべる →</a></span></div>`}
+      ${f.hours ? `<div class="i">${ico("clock")}<span class="v"><span class="k">営業時間</span>${esc(f.hours)}</span></div>` : ""}
       <div class="i">${ico("compass")}<span class="v"><span class="k">くわしい情報</span><a href="${ikitaiSearch(f.name)}" target="_blank" rel="noopener">サウナイキタイで見る →</a></span></div>
       ${f.website ? `<div class="i">${ico("globe")}<span class="v"><span class="k">ホームページ</span><a href="${esc(f.website)}" target="_blank" rel="noopener">ページを開く →</a></span></div>` : ""}
       ${f.price ? `<div class="i">${ico("yen")}<span class="v"><span class="k">料金</span>${esc(f.price)} 円</span></div>` : ""}
@@ -1230,7 +1305,7 @@ function openEdit(id, presetPref) {
   editing = f
     ? JSON.parse(JSON.stringify(f))
     : { id: null, name: "", prefecture: presetPref || "", address: "", phone: "", website: "", price: "",
-        rating: 0, subRatings: {}, photos: [], tags: [], memo: "", visits: [], favorite: false };
+        hours: "", rating: 0, subRatings: {}, photos: [], tags: [], memo: "", visits: [], favorite: false };
 
   $("e-title").textContent = f ? "編集する" : "サウナを追加";
   $("e-name").value = editing.name || "";
@@ -1239,6 +1314,7 @@ function openEdit(id, presetPref) {
   $("e-tel").value = editing.phone || "";
   $("e-web").value = editing.website || "";
   $("e-price").value = editing.price || "";
+  $("e-hours").value = editing.hours || "";
   $("e-tags").value = (editing.tags || []).join(", ");
   $("e-memo").value = editing.memo || "";
   $("e-date").value = f ? "" : today();
@@ -1287,6 +1363,7 @@ async function saveEdit() {
     phone: $("e-tel").value.trim(),
     website: $("e-web").value.trim(),
     price: $("e-price").value.trim(),
+    hours: $("e-hours").value.trim(),
     rating: editing.rating || 0,
     subRatings: editing.subRatings || {},
     photos: editing.photos || [],
@@ -1484,6 +1561,26 @@ $("e-del").onclick = async () => {
   facilities = facilities.filter(x => x.id !== editing.id);
   close_("sh-edit"); close_("sh-detail");
   renderAll(); toast("削除しました");
+};
+
+$("e-lookup").onclick = async () => {
+  const name = $("e-name").value.trim();
+  if (!name) { toast("先に施設名を入れてください"); $("e-name").focus(); return; }
+  toast("しらべています…");
+  try {
+    const d = await lookupPlace(name, $("e-pref").value, "");
+    if (!d) { toast("見つかりませんでした。手で入れてください"); return; }
+    let n = 0;
+    if (d.address) { $("e-addr").value = d.address; n++; }
+    if (d.prefecture && !$("e-pref").value) { $("e-pref").value = d.prefecture; n++; }
+    if (d.phone && !$("e-tel").value) { $("e-tel").value = d.phone; n++; }
+    if (d.website && !$("e-web").value) { $("e-web").value = d.website; n++; }
+    if (d.price && !$("e-price").value) { $("e-price").value = d.price; n++; }
+    if (d.hours && !$("e-hours").value) { $("e-hours").value = d.hours; n++; }
+    toast(n ? `${n} か所に入れました` : "新しく入る情報はありませんでした");
+  } catch (e) {
+    toast("つながりませんでした。電波を確かめてください");
+  }
 };
 
 $("e-addph").onclick = () => $("e-file").click();
