@@ -286,15 +286,36 @@ main{max-width:860px;margin:0 auto;padding:16px 16px 24px}
 .ring .bg{stroke:var(--ground2);stroke-width:11;fill:none}
 .ring .fg{stroke:url(#gr);stroke-width:11;fill:none;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.34,1.3,.64,1)}
 .ring .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.ring .ctr .onsen{width:40px;height:34px;color:var(--sakura);stroke-width:3.4}
-.ring .ctr .onsen .yu{animation:yure 3.6s ease-in-out infinite}
-.ring .ctr .onsen .yu2{animation-delay:.45s}
-.ring .ctr .onsen .yu3{animation-delay:.9s}
+.ring .ctr .onsen2{width:46px;height:42px;color:var(--sakura)}
+.ring .ctr .onsen2 .yu{animation:yure 3.6s ease-in-out infinite}
+.ring .ctr .onsen2 .yu2{animation-delay:.45s}
+.ring .ctr .onsen2 .yu3{animation-delay:.9s}
 @keyframes yure{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
 .ring .ctr .pct{font-size:11px;color:var(--sub);font-weight:700;line-height:1.1}
 .ring .ctr .pct b{font-family:var(--f-disp);font-size:23px;font-weight:800;color:var(--sakura-d);margin-right:1px}
 .ringcard .txt h3{font-size:17px;margin-bottom:5px}
 .ringcard .txt p{margin:0;font-size:12.5px;color:var(--sub);line-height:1.65}
+
+/* ---- じぶんのコンプリート・県ごとの管理 ---- */
+.mycomp{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--sh);margin-top:12px}
+.mycomp .hd2{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.mycomp .t2{font-family:var(--f-disp);font-size:14px;font-weight:800}
+.mycomp .v2{font-size:12.5px;color:var(--sub);white-space:nowrap}
+.mycomp .v2 b{font-size:20px;color:var(--sakura-d);font-family:var(--f-disp)}
+.mycomp .d2{font-size:11.5px;color:var(--sub);margin-top:9px;line-height:1.75}
+.pf{display:flex;align-items:center;gap:9px;background:var(--card);border-radius:16px;
+  padding:11px 13px;margin-bottom:8px;box-shadow:var(--sh)}
+.pf .pn{flex:1;min-width:0}
+.pf .pnm{font-family:var(--f-disp);font-size:14px;font-weight:800;line-height:1.35}
+.pf .pst{font-size:11px;color:var(--sub);margin-top:1px}
+.pf .tg{font-size:10.5px;font-weight:800;font-family:var(--f-disp);padding:7px 11px;
+  border-radius:99px;background:var(--ground2);color:var(--dim);flex:none}
+.pf .tg.on{background:var(--hinoki-lt);color:#B27C29}
+.pf .del2{width:34px;height:34px;border-radius:50%;background:#FFEDE8;color:#D2543A;
+  display:flex;align-items:center;justify-content:center;flex:none}
+.pf .del2 .icon{width:15px;height:15px}
+.pref .done2{position:absolute;left:4px;top:3px;font-size:10px;color:#fff;
+  background:#5FBF7D;border-radius:99px;width:15px;height:15px;line-height:15px;font-weight:800}
 
 .region{margin-top:18px}
 .region h3{font-size:13px;color:var(--ink);margin-bottom:9px;display:flex;align-items:center;gap:8px}
@@ -594,7 +615,20 @@ nav button.on .icon{stroke-width:2.3}
           <circle class="fg" id="ringfg" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
         </svg>
         <div class="ctr">
-          <svg class="icon onsen"><use href="#i-onsen"/></svg>
+          <svg class="onsen2" viewBox="0 0 60 54" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="round">
+              <path class="yu yu1" d="M18 22c0-4.2 4.2-5 4.2-9.2S18 7.6 18 3.6"/>
+              <path class="yu yu2" d="M30 22c0-4.2 4.2-5 4.2-9.2S30 7.6 30 3.6"/>
+              <path class="yu yu3" d="M42 22c0-4.2 4.2-5 4.2-9.2S42 7.6 42 3.6"/>
+            </g>
+            <path d="M3 28h54v5c0 9.4-7.6 17-17 17H20C10.6 50 3 42.4 3 33z" fill="currentColor"/>
+            <circle cx="17" cy="41" r="3.3" fill="#fff" opacity=".45"/>
+            <circle cx="43" cy="41" r="3.3" fill="#fff" opacity=".45"/>
+            <g fill="none" stroke="#fff" stroke-width="2.9" stroke-linecap="round">
+              <path d="M23 37q2 2.6 4 0M33 37q2 2.6 4 0"/>
+              <path d="M28 43q2 2.4 4 0"/>
+            </g>
+          </svg>
           <div class="pct"><b id="r-pct">0</b>％</div>
         </div>
       </div>
@@ -603,6 +637,7 @@ nav button.on .icon{stroke-width:2.3}
         <p id="r-msg"></p>
       </div>
     </div>
+    <div class="mycomp" id="mycomp"></div>
     <div id="prefmap"></div>
     <div class="sec">あつめた記念バッジ</div>
     <div class="badges" id="badges"></div>
@@ -665,6 +700,16 @@ nav button.on .icon{stroke-width:2.3}
   <button data-tab="find"><svg class="icon"><use href="#i-compass"/></svg>さがす</button>
   <button data-tab="stamp"><svg class="icon"><use href="#i-stamp"/></svg>スタンプ帳</button>
 </nav>
+
+<!-- ============ 県ごとの管理 ============ -->
+<div class="sheet" id="sh-pref">
+  <div class="sbar">
+    <button class="iconbtn" data-close="sh-pref" aria-label="戻る"><svg class="icon"><use href="#i-back"/></svg></button>
+    <div class="ttl" id="pf-title"></div>
+    <span style="width:38px;flex:none"></span>
+  </div>
+  <div class="sbody" id="pf-body"></div>
+</div>
 
 <!-- ============ 詳細 ============ -->
 <div class="sheet" id="sh-detail">
@@ -1364,10 +1409,17 @@ function renderStamp() {
     s.pref >= 47 ? "47都道府県すべてでととのいました。"
                  : `あと ${47 - s.pref} 県。スタンプを押すと、その県が桜色に染まります。`;
 
-  const count = {};
+  renderMyComplete();
+
+  const count = {}, tgAll = {}, tgDone = {};
   for (const f of facilities) {
     const n = (f.visits || []).length;
-    if (n > 0 && f.prefecture) count[f.prefecture] = (count[f.prefecture] || 0) + 1;
+    if (!f.prefecture) continue;
+    if (n > 0) count[f.prefecture] = (count[f.prefecture] || 0) + 1;
+    if (isTarget(f)) {
+      tgAll[f.prefecture] = (tgAll[f.prefecture] || 0) + 1;
+      if (n > 0) tgDone[f.prefecture] = (tgDone[f.prefecture] || 0) + 1;
+    }
   }
   $("prefmap").innerHTML = PREFS.map(([region, list]) => {
     const got = list.filter(p => count[p]).length;
@@ -1375,6 +1427,7 @@ function renderStamp() {
       <h3>${region}<em>${got} / ${list.length}</em></h3>
       <div class="pgrid">${list.map(p => `
         <button class="pref ${count[p] ? "got" : ""}" data-pref="${esc(p)}">
+          ${tgAll[p] && tgDone[p] === tgAll[p] ? '<span class="done2">✓</span>' : ""}
           <span>${esc(p.replace(/[都道府県]$/, ""))}</span>
           <b>${count[p] ? count[p] : "–"}</b>
         </button>`).join("")}</div></div>`;
@@ -1450,7 +1503,7 @@ async function addFromCatalog(i) {
   const f = {
     id: uid(), name: c.n, prefecture: c.p, address: c.p + (c.a || ""), phone: "", website: "",
     price: "", hours: "", rating: 0, subRatings: {}, photos: [], tags: [], memo: "",
-    visits: [], favorite: false, createdAt: Date.now(), updatedAt: Date.now()
+    visits: [], favorite: false, target: true, createdAt: Date.now(), updatedAt: Date.now()
   };
   try { await Store.put(f); } catch (e) { toast("保存できませんでした"); return; }
   facilities.push(f);
@@ -1470,6 +1523,61 @@ async function addFromCatalog(i) {
   } catch (e) {
     toast(`「${c.n}」を追加しました（今は住所をしらべられません）`);
   }
+}
+
+/* 「目標」に入れている施設か（古い記録は目標あつかい） */
+const isTarget = f => f.target !== false;
+
+function renderMyComplete() {
+  const tg = facilities.filter(isTarget);
+  const done = tg.filter(f => (f.visits || []).length);
+  const pct = tg.length ? done.length / tg.length * 100 : 0;
+  $("mycomp").innerHTML = `
+    <div class="hd2"><span class="t2">じぶんのコンプリート</span>
+      <span class="v2"><b>${done.length}</b> / ${tg.length} 軒</span></div>
+    <div class="track"><i style="width:${pct.toFixed(0)}%"></i></div>
+    <div class="d2">${
+      !tg.length ? "施設を登録すると、ここに進み具合が出ます。"
+      : done.length === tg.length ? "🎉 目標にした施設を ぜんぶ制覇しました！"
+      : `のこり ${tg.length - done.length} 軒。県のマスを押すと、その県の施設を目標から外したり 消したりできます。`
+    }</div>`;
+}
+
+let prefSheetName = "";
+function openPrefSheet(pref) {
+  prefSheetName = pref;
+  $("pf-title").textContent = pref;
+  const list = facilities.filter(f => f.prefecture === pref)
+    .sort((a, b) => (b.visits || []).length - (a.visits || []).length
+                 || String(a.name).localeCompare(String(b.name), "ja"));
+  const tg = list.filter(isTarget), done = tg.filter(f => (f.visits || []).length);
+  const cat = (CAT_RAW[pref] || []).length;
+
+  $("pf-body").innerHTML = `
+    <div class="mycomp" style="margin-top:0">
+      <div class="hd2"><span class="t2">${esc(pref)}のコンプリート</span>
+        <span class="v2"><b>${done.length}</b> / ${tg.length} 軒</span></div>
+      <div class="track"><i style="width:${tg.length ? (done.length / tg.length * 100).toFixed(0) : 0}%"></i></div>
+      <div class="d2">「目標」にした施設が ぜんぶ済むと、この県はコンプリートです。<br>
+        めざさない施設は「目標」を押して <b>対象外</b> にできます。</div>
+    </div>
+    <div class="sec">登録した施設（${list.length}）</div>
+    ${list.length ? list.map(f => {
+      const n = (f.visits || []).length, t = isTarget(f);
+      return `<div class="pf">
+        <div class="pn">
+          <div class="pnm">${esc(f.name)}</div>
+          <div class="pst">${n ? `済 ${n} 回` : "まだ行っていません"}</div>
+        </div>
+        <button class="tg ${t ? "on" : ""}" data-tgt="${f.id}">${t ? "目標" : "対象外"}</button>
+        <button class="del2" data-delfac="${f.id}" aria-label="${esc(f.name)} を削除">${ico("trash")}</button>
+      </div>`;
+    }).join("") : '<p style="color:var(--sub);font-size:13.5px;padding:2px">この県はまだ登録がありません。</p>'}
+    <div class="emptyacts">
+      <button class="btn mizu" data-openlist="${esc(pref)}">日記でひらく</button>
+      ${cat ? `<button class="btn pri" data-findpref="${esc(pref)}">${esc(pref)}のサウナをさがす（${cat}軒）</button>` : ""}
+    </div>`;
+  open_("sh-pref");
 }
 
 function renderInfo() {
@@ -1611,6 +1719,7 @@ async function saveEdit() {
     memo: $("e-memo").value.trim(),
     visits: editing.visits || [],
     favorite: !!editing.favorite,
+    target: editing.target !== false,
     createdAt: editing.createdAt || Date.now(),
     updatedAt: Date.now()
   };
@@ -1775,7 +1884,36 @@ document.addEventListener("click", async ev => {
   if (ap) { openEdit(null, ap.dataset.addpref); return; }
 
   const pc = hit("[data-pref]");
-  if (pc) { setPrefFilter(pc.dataset.pref); gotoTab("list"); return; }
+  if (pc) { openPrefSheet(pc.dataset.pref); return; }
+
+  const ol = hit("[data-openlist]");
+  if (ol) { close_("sh-pref"); setPrefFilter(ol.dataset.openlist); gotoTab("list"); return; }
+
+  const tgb = hit("[data-tgt]");
+  if (tgb) {
+    const f = facilities.find(x => x.id === tgb.dataset.tgt);
+    if (!f) return;
+    f.target = !isTarget(f);
+    f.updatedAt = Date.now();
+    await Store.put(f);
+    renderAll();
+    openPrefSheet(prefSheetName);
+    toast(f.target ? `${f.name} を目標にしました` : `${f.name} を目標から外しました`);
+    return;
+  }
+
+  const dfb = hit("[data-delfac]");
+  if (dfb) {
+    const f = facilities.find(x => x.id === dfb.dataset.delfac);
+    if (!f) return;
+    if (!confirm(`「${f.name}」の記録をすべて削除します。よろしいですか？`)) return;
+    await Store.del(f.id);
+    facilities = facilities.filter(x => x.id !== f.id);
+    renderAll();
+    openPrefSheet(prefSheetName);
+    toast("削除しました");
+    return;
+  }
   const pill = hit("#f-mode .pill");
   if (pill) {
     filter.mode = pill.dataset.v;
@@ -1935,6 +2073,7 @@ $("f-pref").onchange = e => {
 };
 
 function setFindPref(pref) {
+  if ($("sh-pref").classList.contains("on")) close_("sh-pref");
   findFilter.pref = pref || "";
   findFilter.q = "";
   findShow = 40;
