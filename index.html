@@ -6,20 +6,20 @@
 <meta name="theme-color" content="#FFE1EC">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="サウナ旅">
+<meta name="apple-mobile-web-app-title" content="SAUNA道">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
-<title>くみちゃんのサウナ旅</title>
+<title>SAUNA道</title>
 <style>
 :root{
   /* 温冷交代浴からとった配色 */
   --ground:#FFF5F3;      /* 湯上がりの白（ほんのり桜） */
   --ground2:#FFECEF;
   --card:#FFFFFF;
-  --ink:#4B3A3E;         /* 真っ黒にしない温かい濃茶 */
-  --sub:#95807F;
-  --dim:#C0ACAB;
+  --ink:#57444A;         /* 真っ黒にしない、やわらかい濃茶 */
+  --sub:#998486;
+  --dim:#C6B2B1;
   --line:#F5E1E3;
   --sakura:#EF6E96;      /* 熱・スタンプ */
   --sakura-d:#D5507B;
@@ -32,14 +32,16 @@
   --sh:0 3px 12px rgba(214,120,145,.11);
   --sh-lg:0 12px 32px rgba(214,120,145,.20);
   --r:20px;
-  --f-disp:ui-rounded,"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","M PLUS Rounded 1c","Segoe UI Variable Display","Yu Gothic UI",sans-serif;
-  --f-body:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;
+  /* 角ばらない丸ゴシックで統一して、やわらかい印象にする */
+  --f-disp:ui-rounded,"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","M PLUS Rounded 1c","Zen Maru Gothic","Segoe UI Variable Display","Yu Gothic UI",sans-serif;
+  --f-body:ui-rounded,"Hiragino Maru Gothic ProN","ヒラギノ丸ゴ ProN W4","M PLUS Rounded 1c","Zen Maru Gothic",-apple-system,"Segoe UI Variable Text","Yu Gothic UI",Meiryo,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--ground)}
 body{
   margin:0; background:var(--ground); color:var(--ink);
-  font-family:var(--f-body); font-size:15.5px; line-height:1.68;
+  font-family:var(--f-body); font-size:15.5px; line-height:1.78;
+  letter-spacing:.015em;
   padding-bottom:calc(80px + env(safe-area-inset-bottom));
   overflow-x:hidden;
 }
@@ -54,12 +56,78 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 }
 .icon{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-/* ================= ヘッダー ================= */
-header{
+/* ================= トップ画面 ================= */
+.tophero{
   position:relative; overflow:hidden;
-  background:linear-gradient(168deg,#FFDDE9 0%,#FFE9E0 52%,#FFF5F3 100%);
-  border-radius:0 0 30px 30px;
-  padding:calc(16px + env(safe-area-inset-top)) 18px 20px;
+  background:linear-gradient(168deg,#FFD9E7 0%,#FFE7DC 54%,#FFF5F3 100%);
+  border-radius:0 0 34px 34px;
+  margin:-16px -16px 4px;
+  padding:calc(30px + env(safe-area-inset-top)) 20px 26px;
+}
+.vtitle{
+  font-family:var(--f-disp); font-size:19px; font-weight:800;
+  padding:calc(10px + env(safe-area-inset-top)) 2px 14px; letter-spacing:.04em
+}
+/* ---- アバター ---- */
+.avatarcard{background:var(--card);border-radius:24px;padding:16px;box-shadow:var(--sh);margin-top:16px;text-align:center}
+.avatarcard svg.av{width:min(230px,62vw);height:auto;display:block;margin:0 auto}
+.nextitem{margin-top:12px}
+.nextitem .nx{font-family:var(--f-disp);font-size:13px;font-weight:800;color:var(--sakura-d);margin-bottom:7px}
+.nextitem .nx b{font-size:19px}
+.items{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+@media(min-width:520px){.items{grid-template-columns:repeat(6,1fr)}}
+.item{
+  background:var(--card);border-radius:16px;padding:8px 4px 7px;box-shadow:var(--sh);
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s;position:relative
+}
+.item svg{width:40px;height:40px}
+.item span{font-size:9.5px;font-weight:800;font-family:var(--f-disp);color:var(--sub);line-height:1.25;text-align:center}
+.item.lock{background:var(--ground2);box-shadow:none}
+.item.lock .lk{font-size:19px;opacity:.4}
+.item.on{background:linear-gradient(155deg,#FFE2EC,#FFD0E0);box-shadow:0 4px 13px rgba(239,110,150,.32)}
+.item.on span{color:var(--sakura-d)}
+.item.on::after{content:"きてる";position:absolute;top:-6px;right:-4px;background:var(--sakura);color:#fff;
+  font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:99px;font-family:var(--f-disp)}
+.item:active{transform:scale(.94)}
+.sec .cnt{font-size:12px;color:var(--sakura-d);font-weight:800;letter-spacing:0}
+.burst .mark svg{width:100px;height:100px}
+
+.homeacts{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px}
+.hact{
+  background:var(--card); border-radius:20px; padding:16px 10px; box-shadow:var(--sh);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  font-family:var(--f-disp); font-weight:800; font-size:13.5px; transition:.15s
+}
+.hact:active{transform:scale(.96)}
+.hact .ic{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.hact .ic .icon{width:23px;height:23px;stroke-width:2.1}
+.hact .pink{background:var(--sakura);color:#fff;box-shadow:0 5px 14px rgba(239,110,150,.4)}
+.hact .aqua{background:var(--mizu-lt);color:var(--mizu-d)}
+.hact .wood{background:var(--hinoki-lt);color:#B27C29}
+.hact .grey{background:var(--ground2);color:var(--sub)}
+.logo{position:relative;display:flex;align-items:center;justify-content:center;gap:14px}
+.logo .en{
+  font-family:var(--f-disp); font-weight:800; line-height:.92;
+  font-size:clamp(46px,14.5vw,74px); letter-spacing:.06em;
+  background:linear-gradient(158deg,#FFA4C0 0%,#EF6E96 52%,#CE4874 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(255,255,255,.85)) drop-shadow(0 8px 16px rgba(213,80,123,.22));
+}
+.logo .dou{
+  width:clamp(58px,17vw,84px); aspect-ratio:1; border-radius:50%; flex:none;
+  background:linear-gradient(150deg,#FF8CB0,#E4568A);
+  color:#fff; font-family:var(--f-disp); font-weight:800;
+  font-size:clamp(32px,10vw,48px); line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  border:3.5px solid rgba(255,255,255,.92);
+  box-shadow:0 9px 22px rgba(228,86,138,.45);
+  transform:rotate(-7deg); animation:seal .7s cubic-bezier(.2,1.5,.5,1) backwards;
+}
+@keyframes seal{0%{transform:scale(2.2) rotate(-26deg);opacity:0}60%{transform:scale(.93) rotate(-9deg);opacity:1}100%{transform:scale(1) rotate(-7deg)}}
+.tagline{
+  position:relative; text-align:center; margin-top:12px;
+  font-family:var(--f-disp); font-size:13px; font-weight:800;
+  color:var(--sakura-d); letter-spacing:.13em
 }
 .steam{position:absolute;inset:0;pointer-events:none}
 .steam i{
@@ -443,32 +511,52 @@ nav button.on .icon{stroke-width:2.3}
   </defs>
 </svg>
 
-<header>
-  <div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <div class="hd">
-    <div class="noren"><svg class="icon"><use href="#i-steam"/></svg></div>
-    <div>
-      <h1>くみちゃんのサウナ旅</h1>
-      <p>ととのった数だけ、日本が色づく</p>
-    </div>
-  </div>
-  <div class="conquer">
-    <div class="top">
-      <span class="lb">全国制覇</span>
-      <span class="vl"><b class="num" id="p-num">0</b> / 47 県</span>
-    </div>
-    <div class="track"><i id="p-bar" style="width:0%"></i></div>
-  </div>
-  <div class="stats">
-    <div class="stat"><b class="num" id="s-fac">0</b><span>行った施設</span></div>
-    <div class="stat"><b class="num" id="s-vis">0</b><span>ととのい回数</span></div>
-    <div class="stat"><b class="num" id="s-avg">–</b><span>平均★</span></div>
-  </div>
-</header>
-
 <main>
+  <!-- ============ トップ ============ -->
+  <section class="view on" id="v-home">
+    <div class="tophero">
+      <div class="steam" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <h1 class="logo"><span class="en">SAUNA</span><span class="dou">道</span></h1>
+      <p class="tagline">ととのった数だけ、日本が色づく</p>
+      <div class="conquer">
+        <div class="top">
+          <span class="lb">全国制覇</span>
+          <span class="vl"><b class="num" id="p-num">0</b> / 47 県</span>
+        </div>
+        <div class="track"><i id="p-bar" style="width:0%"></i></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b class="num" id="s-fac">0</b><span>行った施設</span></div>
+        <div class="stat"><b class="num" id="s-vis">0</b><span>ととのい回数</span></div>
+        <div class="stat"><b class="num" id="s-avg">–</b><span>平均★</span></div>
+      </div>
+    </div>
+
+    <div class="avatarcard">
+      <div id="avatar"></div>
+      <div class="nextitem">
+        <div class="nx" id="nx-msg"></div>
+        <div class="track"><i id="nx-bar" style="width:0%"></i></div>
+      </div>
+    </div>
+
+    <div class="sec">もちもの<span class="cnt" id="item-count"></span></div>
+    <div class="items" id="items"></div>
+
+    <div class="homeacts">
+      <button class="hact" data-newfac="1"><span class="ic pink"><svg class="icon"><use href="#i-plus"/></svg></span>サウナを記録</button>
+      <button class="hact" data-goto="find"><span class="ic aqua"><svg class="icon"><use href="#i-compass"/></svg></span>全国からさがす</button>
+      <button class="hact" data-goto="stamp"><span class="ic wood"><svg class="icon"><use href="#i-stamp"/></svg></span>スタンプ帳</button>
+      <button class="hact" data-goto="set"><span class="ic grey"><svg class="icon"><use href="#i-gear"/></svg></span>せってい</button>
+    </div>
+
+    <div class="sec">さいきん行ったサウナ</div>
+    <div class="grid" id="recent"></div>
+  </section>
+
   <!-- ============ 一覧 ============ -->
-  <section class="view on" id="v-list">
+  <section class="view" id="v-list">
+    <h2 class="vtitle">サウナ日記</h2>
     <div class="toolbar">
       <div class="search" id="searchbox">
         <svg class="icon"><use href="#i-search"/></svg>
@@ -498,6 +586,7 @@ nav button.on .icon{stroke-width:2.3}
 
   <!-- ============ スタンプ帳 ============ -->
   <section class="view" id="v-stamp">
+    <h2 class="vtitle">スタンプ帳</h2>
     <div class="ringcard">
       <div class="ring">
         <svg viewBox="0 0 120 120" width="118" height="118">
@@ -521,6 +610,7 @@ nav button.on .icon{stroke-width:2.3}
 
   <!-- ============ さがす ============ -->
   <section class="view" id="v-find">
+    <h2 class="vtitle">全国からさがす</h2>
     <div class="notice">
       <svg class="icon"><use href="#i-compass"/></svg>
       <div>全国の<b>日帰りで入れるサウナ</b>を集めました。旅館・山荘・キャンプ場など
@@ -542,6 +632,7 @@ nav button.on .icon{stroke-width:2.3}
 
   <!-- ============ 設定 ============ -->
   <section class="view" id="v-set">
+    <h2 class="vtitle">せってい</h2>
     <div class="sec">たいせつな記録を守る</div>
     <div class="row">
       <div><div class="t">バックアップを保存</div><div class="d">写真ごと1つのファイルに書き出します</div></div>
@@ -569,10 +660,10 @@ nav button.on .icon{stroke-width:2.3}
 <button class="fab" id="fab"><svg class="icon"><use href="#i-plus"/></svg>サウナを追加</button>
 
 <nav>
-  <button class="on" data-tab="list"><svg class="icon"><use href="#i-list"/></svg>いちらん</button>
-  <button data-tab="stamp"><svg class="icon"><use href="#i-stamp"/></svg>スタンプ帳</button>
+  <button class="on" data-tab="home"><svg class="icon"><use href="#i-onsen"/></svg>ホーム</button>
+  <button data-tab="list"><svg class="icon"><use href="#i-list"/></svg>日記</button>
   <button data-tab="find"><svg class="icon"><use href="#i-compass"/></svg>さがす</button>
-  <button data-tab="set"><svg class="icon"><use href="#i-gear"/></svg>せってい</button>
+  <button data-tab="stamp"><svg class="icon"><use href="#i-stamp"/></svg>スタンプ帳</button>
 </nav>
 
 <!-- ============ 詳細 ============ -->
@@ -794,6 +885,98 @@ const BADGES = [
   { ic:"📸", nm:"記録魔",         ds:"写真20枚",        ok:s => s.photos >= 20 },
   { ic:"💗", nm:"リピーター",     ds:"同じ施設に3回",   ok:s => s.maxRepeat >= 3 }
 ];
+
+/* ============ アバターと あつめるアイテム ============ */
+const ITEM_STEP = 3;                 // スタンプ3個で1アイテム
+const AV_BASE = `
+  <path d="M62 178c0-25 17-44 38-44s38 19 38 44z" fill="#FFF7F3" stroke="#EFDCD7" stroke-width="3"/>
+  <circle cx="64" cy="99" r="7.5" fill="#FFD0B6"/><circle cx="136" cy="99" r="7.5" fill="#FFD0B6"/>
+  <circle cx="100" cy="97" r="36" fill="#FFDCC6"/>
+  <path d="M85 94q5-7 10 0M105 94q5-7 10 0" stroke="#7A5751" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+  <ellipse cx="79" cy="108" rx="7.5" ry="5" fill="#FFAFC5" opacity=".8"/>
+  <ellipse cx="121" cy="108" rx="7.5" ry="5" fill="#FFAFC5" opacity=".8"/>
+  <path d="M95 112q5 6 10 0" stroke="#7A5751" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+
+const ITEMS = [
+  { id:"hat", nm:"サウナハット", slot:"head", vb:"52 30 96 62", svg:`
+    <path d="M64 80c0-23 16-40 36-40s36 17 36 40z" fill="#EF6E96"/>
+    <rect x="56" y="74" width="88" height="13" rx="6.5" fill="#FFE3EC"/>` },
+  { id:"towel", nm:"タオル", slot:"neck", vb:"58 118 84 46", svg:`
+    <path d="M70 128q30 15 60 0l7 22q-37 17-74 0z" fill="#fff" stroke="#E7D2CE" stroke-width="3" stroke-linejoin="round"/>` },
+  { id:"oke", nm:"木の桶", slot:"hand", vb:"128 136 62 48", svg:`
+    <path d="M142 150h36l-5 26h-26z" fill="#E9BE84" stroke="#C99A5E" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="138" y="144" width="44" height="8" rx="4" fill="#F5DCB6"/>` },
+  { id:"mat", nm:"サウナマット", slot:"seat", vb:"46 160 108 34", svg:`
+    <rect x="54" y="170" width="92" height="15" rx="7.5" fill="#8FD0DC"/>
+    <path d="M63 177.5h74" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>` },
+  { id:"water", nm:"水風呂", slot:"bg", vb:"0 130 200 70", svg:`
+    <rect x="0" y="152" width="200" height="48" fill="#D5EFF6"/>
+    <path d="M0 156q25 9 50 0t50 0 50 0 50 0v44H0z" fill="#A9E0EC"/>` },
+  { id:"oropo", nm:"オロポ", slot:"hand", vb:"136 128 56 56", svg:`
+    <path d="M148 140h26l-4 34h-18z" fill="#FFF0D8" stroke="#E9A94F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M150 154h22l-3 20h-16z" fill="#FF9F43"/>` },
+  { id:"tenugui", nm:"手ぬぐい", slot:"head", vb:"56 58 112 42", svg:`
+    <path d="M66 74h68v14H66z" fill="#6FC6D8"/>
+    <path d="M134 80l22-10 4 12-22 8z" fill="#8FD8E6"/>
+    <path d="M66 74h68" stroke="#4FBBCB" stroke-width="3.4"/>` },
+  { id:"chair", nm:"ととのいイス", slot:"seat", vb:"42 158 116 44", svg:`
+    <rect x="50" y="166" width="100" height="13" rx="6.5" fill="#DDA463"/>
+    <rect x="57" y="178" width="11" height="21" rx="5" fill="#C08843"/>
+    <rect x="132" y="178" width="11" height="21" rx="5" fill="#C08843"/>` },
+  { id:"forest", nm:"外気浴の森", slot:"bg", vb:"0 100 200 100", svg:`
+    <rect x="0" y="166" width="200" height="34" fill="#D3ECD4"/>
+    <g fill="#9BD3A0"><path d="M14 168l24-50 24 50z"/><path d="M146 168l26-56 26 56z"/></g>` },
+  { id:"vihta", nm:"ヴィヒタ", slot:"hand", vb:"128 122 62 62", svg:`
+    <path d="M160 178l-9-28" stroke="#B98A5A" stroke-width="5.5" stroke-linecap="round"/>
+    <g fill="#7CC97C"><ellipse cx="145" cy="142" rx="10" ry="6.5" transform="rotate(-28 145 142)"/>
+    <ellipse cx="163" cy="134" rx="10" ry="6.5" transform="rotate(18 163 134)"/>
+    <ellipse cx="154" cy="152" rx="10" ry="6.5" transform="rotate(-4 154 152)"/></g>` },
+  { id:"sun", nm:"サングラス", slot:"face", vb:"66 76 68 34", svg:`
+    <rect x="75" y="86" width="21" height="15" rx="7" fill="#5E4A50"/>
+    <rect x="104" y="86" width="21" height="15" rx="7" fill="#5E4A50"/>
+    <path d="M96 92.5h8" stroke="#5E4A50" stroke-width="4.5"/>` },
+  { id:"ladle", nm:"ロウリュの柄杓", slot:"hand", vb:"140 128 56 56", svg:`
+    <path d="M152 178l16-32" stroke="#C79A62" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M158 138h24v13a12 12 0 0 1-24 0z" fill="#EFC68F" stroke="#C99A5E" stroke-width="3" stroke-linejoin="round"/>` },
+  { id:"night", nm:"星ぞらの夜", slot:"bg", vb:"0 0 200 200", svg:`
+    <rect width="200" height="200" fill="#463C5C"/>
+    <circle cx="166" cy="60" r="15" fill="#FFEFB8"/>
+    <g fill="#FFE9A8"><circle cx="28" cy="36" r="3"/><circle cx="58" cy="20" r="2.2"/>
+    <circle cx="120" cy="26" r="2.6"/><circle cx="180" cy="20" r="2.2"/><circle cx="24" cy="86" r="2.2"/></g>` },
+  { id:"crown", nm:"ととのい王冠", slot:"head", vb:"58 34 84 46", svg:`
+    <path d="M68 74l9-30 12 18 11-22 11 22 12-18 9 30z" fill="#F5C64F" stroke="#DCA22F" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="100" cy="48" r="4.5" fill="#EF6E96"/>` }
+];
+
+const PROFILE_ID = "__profile__";
+let profile = { id: PROFILE_ID, equip: {} };
+
+function ownedCount() { return Math.min(ITEMS.length, Math.floor(summary().vis / ITEM_STEP)); }
+
+function avatarSvg() {
+  const eq = profile.equip || {};
+  const of = slot => ITEMS.find(i => i.id === eq[slot] && ITEMS.indexOf(i) < ownedCount());
+  const bg = of("bg"), seat = of("seat"), neck = of("neck"),
+        head = of("head"), face = of("face"), hand = of("hand");
+  return `<svg class="av" viewBox="0 0 200 200" role="img" aria-label="あなたのサウナアバター">
+    <defs>
+      <linearGradient id="avbg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FFE6D4"/><stop offset="100%" stop-color="#F6D3BE"/>
+      </linearGradient>
+      <clipPath id="avclip"><rect width="200" height="200" rx="26"/></clipPath>
+    </defs>
+    <g clip-path="url(#avclip)">
+      <rect width="200" height="200" fill="url(#avbg)"/>
+      ${bg ? bg.svg : ""}
+      ${seat ? seat.svg : ""}
+      ${AV_BASE}
+      ${neck ? neck.svg : ""}
+      ${head ? head.svg : ""}
+      ${face ? face.svg : ""}
+      ${hand ? hand.svg : ""}
+    </g>
+  </svg>`;
+}
 
 /* ============ 保存層 ============ */
 const Store = {
@@ -1018,7 +1201,76 @@ function summary() {
 }
 
 /* ============ 描画 ============ */
-function renderAll() { renderStats(); renderList(); renderStamp(); renderFind(); renderInfo(); }
+function renderAll() { renderStats(); renderHome(); renderList(); renderStamp(); renderFind(); renderInfo(); }
+
+function gotoTab(name) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + name));
+  $("fab").style.display = name === "list" ? "flex" : "none";
+  window.scrollTo({ top: 0 });
+}
+
+/* 住所に都道府県が入っていれば重ねて出さない */
+function addrLine(f) {
+  let ad = (f.address || "").trim();
+  if (f.prefecture && ad.indexOf(f.prefecture) < 0) ad = (f.prefecture + " " + ad).trim();
+  return ad || "住所は未登録";
+}
+
+function cardHtml(f) {
+  const n = (f.visits || []).length;
+  const ph = (f.photos || [])[0];
+  const tags = (f.tags || []).slice(0, 2).map(t => `<span class="tag w">${esc(t)}</span>`).join("");
+  return `<div class="card">
+    <button class="pic" data-open="${f.id}" aria-label="${esc(f.name)} の詳細を見る">
+      ${ph ? `<img src="${ph}" alt="">` : `<div class="ph">${ico("bath")}</div>`}
+      ${n > 0 ? `<span class="seal">${n}回</span>` : '<span class="seal wish">行きたい</span>'}
+    </button>
+    <button class="body" data-open="${f.id}">
+      <div class="nm">${f.favorite ? "💗 " : ""}${esc(f.name)}</div>
+      <div class="ad">${esc(addrLine(f))}</div>
+      <div class="ft"><span class="stars">${starHtml(f.rating)}</span>${tags}</div>
+    </button>
+    <button class="quick" data-quick="${f.id}" aria-label="${esc(f.name)} にスタンプを押す">
+      ${ico("stamp")}おす
+    </button>
+  </div>`;
+}
+
+function renderHome() {
+  $("avatar").innerHTML = avatarSvg();
+
+  const owned = ownedCount(), vis = summary().vis;
+  if (owned >= ITEMS.length) {
+    $("nx-msg").textContent = "アイテムを ぜんぶ あつめました！";
+    $("nx-bar").style.width = "100%";
+  } else {
+    const done = vis % ITEM_STEP;
+    $("nx-msg").innerHTML = `あと <b class="num">${ITEM_STEP - done}</b> 回のスタンプで つぎのアイテム`;
+    $("nx-bar").style.width = (done / ITEM_STEP * 100) + "%";
+  }
+  $("item-count").textContent = `　${owned} / ${ITEMS.length}`;
+  $("items").innerHTML = ITEMS.map((it, i) => {
+    if (i >= owned) {
+      return `<div class="item lock"><span class="lk">🔒</span><span>あと${(i + 1) * ITEM_STEP - vis}回</span></div>`;
+    }
+    const on = profile.equip[it.slot] === it.id;
+    return `<button class="item ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
+      <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
+  }).join("");
+
+  const rows = facilities
+    .filter(f => (f.visits || []).length)
+    .map(f => ({ f, last: f.visits.map(v => v.date).sort().pop() || "" }))
+    .sort((a, b) => String(b.last).localeCompare(String(a.last)))
+    .slice(0, 3);
+  $("recent").innerHTML = rows.length
+    ? rows.map(r => cardHtml(r.f)).join("")
+    : `<div class="empty" style="padding:24px 16px">
+         <div class="t">まだ記録がありません</div>
+         <div class="d">「サウナを記録」から1軒目をどうぞ</div>
+       </div>`;
+}
 
 function renderStats() {
   const s = summary();
@@ -1077,26 +1329,7 @@ function renderList() {
         : emptyHtml("さあ、旅のはじまり", "右下の「サウナを追加」から最初の1軒を登録しましょう", "");
     return;
   }
-  box.innerHTML = rows.map(f => {
-    const n = (f.visits || []).length;
-    const ph = (f.photos || [])[0];
-    const ad = [f.prefecture, f.address].filter(Boolean).join(" ") || "住所は未登録";
-    const tags = (f.tags || []).slice(0, 2).map(t => `<span class="tag w">${esc(t)}</span>`).join("");
-    return `<div class="card">
-      <button class="pic" data-open="${f.id}" aria-label="${esc(f.name)} の詳細を見る">
-        ${ph ? `<img src="${ph}" alt="">` : `<div class="ph">${ico("bath")}</div>`}
-        ${n > 0 ? `<span class="seal">${n}回</span>` : '<span class="seal wish">行きたい</span>'}
-      </button>
-      <button class="body" data-open="${f.id}">
-        <div class="nm">${f.favorite ? "💗 " : ""}${esc(f.name)}</div>
-        <div class="ad">${esc(ad)}</div>
-        <div class="ft"><span class="stars">${starHtml(f.rating)}</span>${tags}</div>
-      </button>
-      <button class="quick" data-quick="${f.id}" aria-label="${esc(f.name)} にスタンプを押す">
-        ${ico("stamp")}おす
-      </button>
-    </div>`;
-  }).join("");
+  box.innerHTML = rows.map(cardHtml).join("");
 }
 
 function emptyHtml(t, d, pref) {
@@ -1405,23 +1638,47 @@ function openVisit(id) {
   $("v-memo").value = "";
   open_("sh-visit");
 }
+async function saveProfile() { try { await Store.put(profile); } catch (e) { /* 保存できなくても続ける */ } }
+
 async function addVisit(id, date, memo) {
   const f = facilities.find(x => x.id === id);
   if (!f) return null;
   const before = new Set(facilities.filter(x => (x.visits || []).length > 0 && x.prefecture).map(x => x.prefecture));
+  const beforeItems = ownedCount();
   f.visits = (f.visits || []).concat([{ id: uid(), date: date || today(), memo: memo || "" }]);
   f.updatedAt = Date.now();
   await Store.put(f);
-  return { f, newPref: !!f.prefecture && !before.has(f.prefecture) };
+
+  const got = ITEMS.slice(beforeItems, ownedCount());
+  if (got.length) {
+    for (const it of got) profile.equip[it.slot] = it.id;   // もらったものは そのまま着る
+    await saveProfile();
+  }
+  return { f, newPref: !!f.prefecture && !before.has(f.prefecture), got };
 }
+
+/* もらったアイテムを大きく見せる */
+function itemBurst(item) {
+  const b = $("burst");
+  $("burst-mark").innerHTML = `<svg viewBox="${item.vb}">${item.svg}</svg>`;
+  $("burst-msg").textContent = `アイテムGET！ ${item.nm}`;
+  b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
+  clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2300);
+}
+
+function afterVisit(r) {
+  if (r.got.length) itemBurst(r.got[r.got.length - 1]);
+  else if (r.newPref) burst("初", `${r.f.prefecture} を制覇！`);
+  else burst("済", `${r.f.visits.length} 回目のととのい`);
+}
+
 async function saveVisit() {
   const r = await addVisit(visitTargetId, $("v-date").value, $("v-memo").value.trim());
   if (!r) return;
   close_("sh-visit");
   renderAll();
   openDetail(r.f.id);
-  if (r.newPref) burst("初", `${r.f.prefecture} を制覇！`);
-  else burst("済", `${r.f.visits.length} 回目のととのい`);
+  afterVisit(r);
 }
 
 /* ============ シート ============ */
@@ -1434,10 +1691,10 @@ function close_(id) {
 
 /* ============ 入出力 ============ */
 function exportJSON() {
-  const data = { app: "saunacomp", version: 1, exportedAt: new Date().toISOString(), facilities };
+  const data = { app: "saunacomp", version: 2, exportedAt: new Date().toISOString(), facilities, profile };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
   const a = document.createElement("a");
-  a.href = url; a.download = `サウナ旅バックアップ-${today()}.json`; a.click();
+  a.href = url; a.download = `SAUNA道バックアップ-${today()}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast("バックアップを保存しました");
 }
@@ -1456,6 +1713,10 @@ async function importJSON(file) {
       await Store.put(r);
       if (i >= 0) { facilities[i] = r; upd++; } else { facilities.push(r); add++; }
     }
+    if (data.profile && data.profile.equip) {
+      profile.equip = data.profile.equip;
+      await saveProfile();
+    }
     renderAll();
     toast(`${add} 件を追加、${upd} 件を更新しました`);
   } catch (e) {
@@ -1469,13 +1730,25 @@ document.addEventListener("click", async ev => {
   const hit = sel => t.closest(sel);
 
   const nav = hit("nav button");
-  if (nav) {
-    document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b === nav));
-    document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + nav.dataset.tab));
-    $("fab").style.display = nav.dataset.tab === "list" ? "flex" : "none";
-    window.scrollTo({ top: 0 });
+  if (nav) { gotoTab(nav.dataset.tab); return; }
+
+  const go = hit("[data-goto]");
+  if (go) { gotoTab(go.dataset.goto); return; }
+
+  if (hit("[data-newfac]")) { openEdit(null); return; }
+
+  const itb = hit("[data-item]");
+  if (itb) {
+    const it = ITEMS.find(x => x.id === itb.dataset.item);
+    if (!it) return;
+    const wearing = profile.equip[it.slot] === it.id;
+    profile.equip[it.slot] = wearing ? "" : it.id;
+    await saveProfile();
+    renderHome();
+    toast(wearing ? `${it.nm} をはずしました` : `${it.nm} を身につけました`);
     return;
   }
+
   const cl = hit("[data-close]");
   if (cl) { close_(cl.dataset.close); return; }
 
@@ -1484,8 +1757,7 @@ document.addEventListener("click", async ev => {
     const r = await addVisit(qk.dataset.quick, today(), "");
     if (!r) return;
     renderAll();
-    if (r.newPref) burst("初", `${r.f.prefecture} を制覇！`);
-    else burst("済", `${r.f.name}\n${r.f.visits.length} 回目`);
+    afterVisit(r);
     return;
   }
   const card = hit("[data-open]");
@@ -1503,11 +1775,7 @@ document.addEventListener("click", async ev => {
   if (ap) { openEdit(null, ap.dataset.addpref); return; }
 
   const pc = hit("[data-pref]");
-  if (pc) {
-    setPrefFilter(pc.dataset.pref);
-    document.querySelector('nav button[data-tab="list"]').click();
-    return;
-  }
+  if (pc) { setPrefFilter(pc.dataset.pref); gotoTab("list"); return; }
   const pill = hit("#f-mode .pill");
   if (pill) {
     filter.mode = pill.dataset.v;
@@ -1674,7 +1942,7 @@ function setFindPref(pref) {
   $("fd-pref").value = findFilter.pref;
   $("fd-pref").classList.toggle("on", !!findFilter.pref);
   renderFind();
-  document.querySelector('nav button[data-tab="find"]').click();
+  gotoTab("find");
 }
 $("fd-q").oninput = e => { findFilter.q = e.target.value; findShow = 40; renderFind(); };
 $("fd-pref").onchange = e => {
@@ -1697,6 +1965,8 @@ $("b-clear").onclick = async () => {
   if (!confirm("本当によろしいですか？（先にバックアップの保存をおすすめします）")) return;
   await Store.clear();
   facilities = [];
+  profile = { id: PROFILE_ID, equip: {} };
+  await saveProfile();
   renderAll(); toast("すべての記録を削除しました");
 };
 
@@ -1714,8 +1984,12 @@ document.addEventListener("keydown", e => {
   $("f-pref").innerHTML = '<option value="">全国のサウナ</option>' + groups;
   $("fd-pref").innerHTML = '<option value="">全国のサウナ</option>' + groups;
   await Store.init();
-  facilities = await Store.all();
+  const rows = await Store.all();
+  profile = rows.find(r => r.id === PROFILE_ID) || { id: PROFILE_ID, equip: {} };
+  if (!profile.equip) profile.equip = {};
+  facilities = rows.filter(r => r.id !== PROFILE_ID);
   renderAll();
+  gotoTab("home");
 
   /* 圏外でも開けるように控えを用意する（用意できない場所では何もしない） */
   if ("serviceWorker" in navigator && location.protocol === "https:") {
