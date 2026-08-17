@@ -594,12 +594,20 @@ nav button.on .icon{stroke-width:2.3}
   </div>
   <div class="sbody">
     <div class="field">
+      <label>① 都道府県をえらぶ</label>
+      <select id="e-pref"></select>
+    </div>
+    <div class="field">
+      <label>② お店をえらぶ</label>
+      <select id="e-pick"></select>
+      <div class="hint">えらぶと名前と住所が自動で入ります。一覧にないお店は下に直接どうぞ</div>
+    </div>
+    <div class="field">
       <label>施設名 <i>*</i></label>
       <div class="withbtn">
         <input type="text" id="e-name" placeholder="例）サウナしきじ" autocomplete="off">
         <button class="btn mizu" id="e-lookup">しらべる</button>
       </div>
-      <div class="hint">名前を入れて「しらべる」を押すと、住所などが自動で入ります</div>
     </div>
     <div class="field">
       <label>写真</label>
@@ -622,15 +630,14 @@ nav button.on .icon{stroke-width:2.3}
       <div class="substars" id="e-subs"></div>
     </div>
     <div class="two">
-      <div class="field"><label>都道府県</label><select id="e-pref"></select></div>
       <div class="field"><label>料金（円）</label><input type="number" id="e-price" inputmode="numeric" placeholder="1200"></div>
+      <div class="field"><label>営業時間</label><input type="text" id="e-hours" placeholder="10:00〜24:00"></div>
     </div>
     <div class="field"><label>住所</label><input type="text" id="e-addr" placeholder="静岡県静岡市駿河区…" autocomplete="off"></div>
     <div class="two">
       <div class="field"><label>電話番号</label><input type="tel" id="e-tel" placeholder="054-000-0000"></div>
       <div class="field"><label>ホームページ</label><input type="url" id="e-web" placeholder="ページのアドレス" inputmode="url"></div>
     </div>
-    <div class="field"><label>営業時間</label><input type="text" id="e-hours" placeholder="例）10:00〜24:00"></div>
     <div class="field">
       <label>タグ</label>
       <input type="text" id="e-tags" placeholder="ロウリュ, 外気浴, 24時間">
@@ -1321,9 +1328,9 @@ function openEdit(id, presetPref) {
   $("e-firstvisit").style.display = f ? "none" : "block";
   $("e-del").style.display = f ? "block" : "none";
 
+  fillPickOptions(editing.prefecture);
   paintStars(); paintPhotos();
   open_("sh-edit");
-  if (!f) setTimeout(() => $("e-name").focus(), 300);
 }
 
 function paintStars() {
@@ -1563,24 +1570,56 @@ $("e-del").onclick = async () => {
   renderAll(); toast("削除しました");
 };
 
-$("e-lookup").onclick = async () => {
+/* 県の一覧（お店をえらぶプルダウン）を組み立てる */
+function fillPickOptions(pref) {
+  const sel = $("e-pick");
+  const list = CAT_RAW[pref] || [];
+  if (!pref || !list.length) {
+    sel.innerHTML = '<option value="">まず都道府県をえらんでください</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = `<option value="">${esc(pref)}の ${list.length} 軒からえらぶ…</option>`
+    + list.map((e, i) => `<option value="${i}">${esc(e[0])}${e[1] ? "（" + esc(e[1]) + "）" : ""}</option>`).join("");
+}
+
+async function lookupIntoForm(area) {
   const name = $("e-name").value.trim();
   if (!name) { toast("先に施設名を入れてください"); $("e-name").focus(); return; }
   toast("しらべています…");
   try {
-    const d = await lookupPlace(name, $("e-pref").value, "");
-    if (!d) { toast("見つかりませんでした。手で入れてください"); return; }
+    const d = await lookupPlace(name, $("e-pref").value, area || "");
+    if (!d) { toast("住所は見つかりませんでした。手で入れてください"); return; }
     let n = 0;
     if (d.address) { $("e-addr").value = d.address; n++; }
-    if (d.prefecture && !$("e-pref").value) { $("e-pref").value = d.prefecture; n++; }
+    if (d.prefecture && !$("e-pref").value) { $("e-pref").value = d.prefecture; fillPickOptions(d.prefecture); n++; }
     if (d.phone && !$("e-tel").value) { $("e-tel").value = d.phone; n++; }
     if (d.website && !$("e-web").value) { $("e-web").value = d.website; n++; }
     if (d.price && !$("e-price").value) { $("e-price").value = d.price; n++; }
     if (d.hours && !$("e-hours").value) { $("e-hours").value = d.hours; n++; }
-    toast(n ? `${n} か所に入れました` : "新しく入る情報はありませんでした");
+    toast(n ? `${n} か所に自動で入れました` : "新しく入る情報はありませんでした");
   } catch (e) {
     toast("つながりませんでした。電波を確かめてください");
   }
+}
+
+$("e-lookup").onclick = () => lookupIntoForm("");
+
+$("e-pref").onchange = e => {
+  if (editing) editing.prefecture = e.target.value;
+  fillPickOptions(e.target.value);
+};
+
+$("e-pick").onchange = async e => {
+  const v = e.target.value;
+  if (v === "") return;
+  const pref = $("e-pref").value;
+  const row = (CAT_RAW[pref] || [])[+v];
+  if (!row) return;
+  $("e-name").value = row[0];
+  $("e-addr").value = pref + (row[1] || "");   // まず県＋市区町村を入れておく
+  await lookupIntoForm(row[1] || "");
 };
 
 $("e-addph").onclick = () => $("e-file").click();
