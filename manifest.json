@@ -1,6 +1,6 @@
 {
-  "name": "くみちゃんのサウナ旅",
-  "short_name": "サウナ旅",
+  "name": "SAUNA道",
+  "short_name": "SAUNA道",
   "description": "全国のサウナをめぐって、47都道府県を桜色に染めていく記録帳",
   "lang": "ja",
   "start_url": "./",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFF5F3",
-  "theme_color": "#FFE1EC",
+  "theme_color": "#FFD9E7",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
