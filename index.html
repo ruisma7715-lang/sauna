@@ -380,6 +380,30 @@ main{max-width:860px;margin:0 auto;padding:16px 16px 24px}
 .pref .done2{position:absolute;left:4px;top:3px;font-size:10px;color:#fff;
   background:#5FBF7D;border-radius:99px;width:15px;height:15px;line-height:15px;font-weight:800}
 
+/* ---- 日本地図・カレンダー・グラフ ---- */
+.jp{width:100%;max-width:360px;height:auto;display:block;margin:0 auto}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.scrollx svg{display:block}
+#monthly svg{width:100%;height:auto;display:block}
+/* ---- ミッション・レア・記録チップ ---- */
+.ms{display:flex;align-items:center;gap:12px;margin-top:9px;padding:12px 16px;
+  border-radius:18px;background:var(--mizu-lt);box-shadow:var(--sh)}
+.ms .msb{flex:1;min-width:0}
+.ms .mst{font-family:var(--f-disp);font-size:12.5px;font-weight:800;color:var(--mizu-d)}
+.ms .msd{font-size:11.5px;color:var(--sub);margin-top:1px}
+.ms .msn{font-size:11px;font-weight:800;color:var(--sub);font-family:var(--f-disp);white-space:nowrap}
+.item.rare{background:linear-gradient(155deg,#FFF3D6,#FFE3AE);box-shadow:0 4px 12px rgba(226,168,87,.34)}
+.item.rare span{color:#B27C29}
+.item.rare.lock{background:var(--ground2);box-shadow:none}
+.item.rare.lock span{color:var(--sub)}
+.lvn.sad{color:var(--mizu-d)}
+.chips5{display:flex;gap:6px}
+.chips5 button{flex:1;padding:11px 0;border-radius:12px;background:var(--card);box-shadow:var(--sh);
+  font-family:var(--f-disp);font-weight:800;font-size:14px;color:var(--sub);transition:.15s}
+.chips5 button.on{background:var(--sakura);color:#fff;box-shadow:0 4px 12px rgba(239,110,150,.4)}
+.vmeta{font-size:11px;color:var(--mizu-d);font-weight:700;margin-top:1px}
+.selrow .btn{flex:none}
+
 .region{margin-top:18px}
 .region h3{font-size:13px;color:var(--ink);margin-bottom:9px;display:flex;align-items:center;gap:8px}
 .region h3 em{font-style:normal;font-size:11px;color:var(--sub);font-weight:700;background:var(--card);padding:2px 9px;border-radius:99px;box-shadow:var(--sh)}
@@ -708,7 +732,22 @@ nav button.on .icon{stroke-width:2.3}
       </div>
     </div>
     <div class="mycomp" id="mycomp"></div>
-    <div id="prefmap"></div>
+
+    <div class="sec">日本地図</div>
+    <div id="jpmap"></div>
+
+    <div class="sec">サ活カレンダー</div>
+    <div class="scrollx"><div id="heat"></div></div>
+
+    <div class="sec">月ごとのサ活</div>
+    <div id="monthly"></div>
+
+    <div class="sec">ふりかえり</div>
+    <div class="row">
+      <div><div class="t">今年のサマリー</div><div class="d">1枚の画像にまとめて保存できます</div></div>
+      <button class="btn mizu" id="sum-save">画像で保存</button>
+    </div>
+
     <div class="sec">あつめた記念バッジ</div>
     <div class="badges" id="badges"></div>
   </section>
@@ -728,6 +767,7 @@ nav button.on .icon{stroke-width:2.3}
       </div>
       <div class="selrow">
         <select id="fd-pref" class="selpill" aria-label="都道府県でしぼりこむ"></select>
+        <button class="btn mizu" id="fd-near">現在地からさがす</button>
       </div>
     </div>
     <div class="rinfo" id="fd-info"></div>
@@ -876,6 +916,21 @@ nav button.on .icon{stroke-width:2.3}
       <div style="font-family:var(--f-disp);font-weight:800;font-size:17px" id="v-facname"></div>
     </div>
     <div class="field"><label>行った日</label><input type="date" id="v-date"></div>
+    <div class="field">
+      <label>ととのい度</label>
+      <div class="chips5" id="v-tot">
+        ${""}<button data-tot="1">1</button><button data-tot="2">2</button><button data-tot="3">3</button><button data-tot="4">4</button><button data-tot="5">5</button>
+      </div>
+    </div>
+    <div class="two">
+      <div class="field">
+        <label>セット数</label>
+        <div class="chips5" id="v-sets">
+          <button data-sets="1">1</button><button data-sets="2">2</button><button data-sets="3">3</button><button data-sets="4">4</button><button data-sets="5">5</button>
+        </div>
+      </div>
+      <div class="field"><label>水風呂（℃）</label><input type="number" id="v-water" inputmode="numeric" placeholder="15"></div>
+    </div>
     <div class="field"><label>ひとことメモ（任意）</label><textarea id="v-memo" placeholder="今日もととのった…"></textarea></div>
   </div>
 </div>
@@ -1043,9 +1098,12 @@ function sweatSvg() {
 
 /* 頭。mode="totonoi" のときは ととのい顔になる */
 function avHead(mode) {
-  const totonoi = mode === "totonoi";
+  const totonoi = mode === "totonoi", sad = mode === "sad";
   const eyes = totonoi ? `
     <path d="M80 65l8 6-8 6M120 65l-8 6 8 6" fill="none" stroke="#3A2620" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`
+  : sad ? `
+    <path d="M80 68q8 7 16 0M104 68q8 7 16 0" fill="none" stroke="#3A2620" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M78 58q9-3 17 1M105 59q8-4 17-1" fill="none" stroke="#6B4E44" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>`
   : `
     <ellipse cx="88" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
     <ellipse cx="112" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
@@ -1071,6 +1129,8 @@ function avHead(mode) {
   const mouth = totonoi ? `
     <ellipse cx="100" cy="87" rx="6.4" ry="5.6" fill="#C9455C"/>
     <path d="M95.5 85q4.5-2 9 0" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".45"/>`
+  : sad ? `
+    <path d="M94 90q6-6 12 0" fill="none" stroke="#B54A5F" stroke-width="2.8" stroke-linecap="round"/>`
   : `
     <path d="M100 84q-6 .8-6 4t6 6.4q6-3.2 6-6.4t-6-4z" fill="#DE6076"/>
     <path d="M94.4 87.6q5.6-2.6 11.2 0" fill="none" stroke="#B54A5F" stroke-width="1.4" stroke-linecap="round"/>
@@ -1288,6 +1348,40 @@ const wataruBody = f => `
       </g>
     </g>`;
 
+/* サウナくじ でしか出ない レアアイテム */
+const RARE = [
+  { id:"goldhat", rare:1, nm:"金のサウナハット", slot:"head", vb:"54 6 92 54", svg:`
+    <path d="M68 48c0-20 14-35 32-35s32 15 32 35z" fill="#F2C14E"/>
+    <path d="M78 44c0-13 9-24 22-24" fill="none" stroke="#FFE9AE" stroke-width="4" stroke-linecap="round"/>
+    <rect x="58" y="43" width="84" height="13" rx="6.5" fill="#FFF0C6"/>
+    <circle cx="100" cy="12" r="5" fill="#FFF0C6"/>` },
+  { id:"vcrown", rare:1, nm:"ヴィヒタの冠", slot:"head", vb:"56 12 88 50", svg:`
+    <path d="M64 56q36-22 72 0" fill="none" stroke="#6FAE68" stroke-width="7" stroke-linecap="round"/>
+    <g fill="#7CC97C"><ellipse cx="74" cy="46" rx="9" ry="6" transform="rotate(-30 74 46)"/>
+    <ellipse cx="90" cy="38" rx="9" ry="6" transform="rotate(-14 90 38)"/>
+    <ellipse cx="110" cy="38" rx="9" ry="6" transform="rotate(14 110 38)"/>
+    <ellipse cx="126" cy="46" rx="9" ry="6" transform="rotate(30 126 46)"/></g>
+    <circle cx="100" cy="32" r="5" fill="#FFE0EC"/>` },
+  { id:"rainbow", rare:1, nm:"虹のタオル", slot:"neck", vb:"64 92 72 44", svg:`
+    <path d="M74 102q26 14 52 0l6 22q-32 15-64 0z" fill="#FFF6FA" stroke="#E7D2CE" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M76 110q24 12 48 0" fill="none" stroke="#F2789F" stroke-width="3.4"/>
+    <path d="M76 116q24 12 48 0" fill="none" stroke="#F0B429" stroke-width="3.4"/>
+    <path d="M76 122q24 12 48 0" fill="none" stroke="#4FBBCB" stroke-width="3.4"/>` },
+  { id:"fuji", rare:1, nm:"富士山の朝焼け", slot:"bg", vb:"0 90 260 170", svg:`
+    <rect x="0" y="200" width="260" height="60" fill="#E7D9C6"/>
+    <path d="M0 202l86-84 40 40 26-26 108 70z" fill="#8FA8C4"/>
+    <path d="M86 118l24 24q-24 10-48 0z" fill="#FFFFFF"/>
+    <path d="M152 132l14 14q-14 6-28 0z" fill="#FFFFFF"/>` },
+  { id:"kami", rare:1, nm:"サ神の羽", slot:"back", vb:"12 80 236 100", svg:`
+    <path d="M96 112q-40-30-74-8 6 42 54 56z" fill="#FFFDF6" stroke="#F0E2B8" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M104 112q40-30 74-8-6 42-54 56z" fill="#FFFDF6" stroke="#F0E2B8" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M40 116q22 18 34 40M160 116q-22 18-34 40" fill="none" stroke="#EFD79A" stroke-width="2.4"/>` }
+];
+const ALL_ITEMS = ITEMS.concat(RARE);
+function hasItem(it) {
+  return it.rare ? (profile.rare || []).indexOf(it.id) >= 0 : ITEMS.indexOf(it) < ownedCount();
+}
+
 /* アバターの絵の中で なかまが立つ位置（手前2人・奥2人） */
 const FR_SLOT = [
   { x:150, y:158, s:.60, z:2 },
@@ -1299,17 +1393,49 @@ const FR_SLOT = [
 const PROFILE_ID = "__profile__";
 let profile = { id: PROFILE_ID, equip: {}, usedTickets: 0 };
 
-function ticketsEarned() { return Math.floor(summary().vis / TICKET_STEP); }
+function ticketsEarned() { return Math.floor(summary().vis / TICKET_STEP) + (profile.bonus || 0); }
 function ticketsLeft() { return Math.max(0, ticketsEarned() - (profile.usedTickets || 0)); }
+
+/* --- 今週のミッション（達成すると無料券がもう1枚） --- */
+const MISSION_NEED = 2;
+function weekKey(d) {
+  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = (t.getDay() + 6) % 7;               // 月曜はじまり
+  t.setDate(t.getDate() - day);
+  return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+}
+function thisWeekVisits() {
+  const wk = weekKey(new Date());
+  let n = 0;
+  for (const f of facilities) for (const v of (f.visits || [])) {
+    if (v.date && weekKey(new Date(v.date + "T00:00:00")) === wk) n++;
+  }
+  return n;
+}
+function missionState() {
+  const wk = weekKey(new Date());
+  const done = thisWeekVisits();
+  const claimed = !!(profile.missions || {})[wk];
+  return { wk, done, need: MISSION_NEED, claimed, ready: done >= MISSION_NEED && !claimed };
+}
+
+/* --- どのくらい行っていないか（アバターの体調） --- */
+function daysSinceLast() {
+  let last = "";
+  for (const f of facilities) for (const v of (f.visits || [])) if (v.date > last) last = v.date;
+  if (!last) return -1;
+  return Math.floor((Date.now() - new Date(last + "T00:00:00").getTime()) / 86400000);
+}
 
 function ownedCount() { return Math.min(ITEMS.length, Math.floor(summary().vis / ITEM_STEP)); }
 
 function avatarSvg(opt) {
   const ex = opt && opt.exportMode;
   const sky = skyOf();
-  const mode = (!ex && Date.now() < totonoiUntil) ? "totonoi" : "normal";
+  const away = daysSinceLast();
+  const mode = (!ex && Date.now() < totonoiUntil) ? "totonoi" : (away > 14 ? "sad" : "normal");
   const eq = profile.equip || {};
-  const of = slot => ITEMS.find(i => i.id === eq[slot] && ITEMS.indexOf(i) < ownedCount());
+  const of = slot => ALL_ITEMS.find(i => i.id === eq[slot] && hasItem(i));
   const bg = of("bg"), seat = of("seat"), back = of("back"), tops = of("tops"),
         bottoms = of("bottoms"), shoes = of("shoes"), neck = of("neck"),
         head = of("head"), face = of("face"), hand = of("hand");
@@ -1363,11 +1489,11 @@ function avatarSvg(opt) {
         <g class="armR">${hand ? hand.svg : ""}</g>
       </g>
       ${mates}
-      <g class="avsteam">
+      ${mode === "sad" ? "" : `<g class="avsteam">
         <circle class="s1" cx="80" cy="26" r="5" fill="#ffffff"/>
         <circle class="s2" cx="100" cy="20" r="6.5" fill="#ffffff"/>
         <circle class="s3" cx="120" cy="26" r="5" fill="#ffffff"/>
-      </g>
+      </g>`}
     </g>
   </svg>`;
 }
@@ -1634,16 +1760,42 @@ function cardHtml(f) {
 function renderTickets() {
   const left = ticketsLeft(), vis = summary().vis;
   const rest = TICKET_STEP - (vis % TICKET_STEP);
+  const rare = (profile.rare || []).length;
+  const ms = missionState();
   $("ticket").innerHTML = `
     <div class="tk">
       ${wataru("sm", WATARU_F)}
       <div class="tkb">
         <div class="tkt">ワタル君の無料券</div>
         <div class="tkn"><b>${left}</b> 枚</div>
-        <div class="tkd">あと <b>${rest}</b> 回ととのうと もう1枚もらえます</div>
+        <div class="tkd">あと <b>${rest}</b> 回ととのうと もう1枚／レア ${rare} / ${RARE.length}</div>
       </div>
-      ${left ? '<button class="btn pri" data-usetk="1">つかう</button>' : ""}
+      ${left ? '<button class="btn pri" data-usetk="1">くじを引く</button>' : ""}
+    </div>
+    <div class="ms">
+      <div class="msb">
+        <div class="mst">今週のミッション</div>
+        <div class="msd">今週 ${ms.need} 回ととのう（いま ${ms.done} 回）</div>
+      </div>
+      ${ms.ready ? '<button class="btn pri" data-mission="1">受け取る</button>'
+                 : `<span class="msn">${ms.claimed ? "受け取りずみ" : "あと " + Math.max(0, ms.need - ms.done) + " 回"}</span>`}
     </div>`;
+}
+
+/* サウナくじ。無料券1枚で レアアイテムが1個 当たる */
+async function drawGacha() {
+  if (!ticketsLeft()) return;
+  const pool = RARE.filter(r => (profile.rare || []).indexOf(r.id) < 0);
+  if (!pool.length) { toast("レアアイテムは ぜんぶ出ました"); return; }
+  if (!confirm("無料券を1枚つかって サウナくじを引きますか？")) return;
+  const hit = pool[Math.floor(Math.random() * pool.length)];
+  profile.usedTickets = (profile.usedTickets || 0) + 1;
+  profile.rare = (profile.rare || []).concat([hit.id]);
+  profile.equip[hit.slot] = hit.id;
+  await saveProfile();
+  renderHome();
+  itemBurst(hit);
+  setTimeout(() => toast(`レア「${hit.nm}」を身につけました`), 900);
 }
 
 function renderFriends() {
@@ -1659,34 +1811,156 @@ function renderFriends() {
   }).join("");
 }
 
-/* 今の姿を画像として書き出す */
+/* SVGをPNGにして保存する共通処理 */
+async function svgToPng(svg, w, h, name, scale) {
+  const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = () => rej(new Error("svg"));
+    i.src = src;
+  });
+  const S = scale || 3, cv = document.createElement("canvas");
+  cv.width = w * S; cv.height = h * S;
+  cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+  const out = await new Promise(r => cv.toBlob(r, "image/png"));
+  if (!out) throw new Error("blob");
+  const url = URL.createObjectURL(out);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 async function saveAvatarImage() {
   toast("画像を作っています…");
-  const svg = avatarSvg({ exportMode: true });
-  const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   try {
-    const img = await new Promise((res, rej) => {
-      const i = new Image();
-      i.onload = () => res(i);
-      i.onerror = () => rej(new Error("svg"));
-      i.src = src;
-    });
-    const S = 3, cv = document.createElement("canvas");
-    cv.width = 260 * S; cv.height = 260 * S;
-    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-    const out = await new Promise(r => cv.toBlob(r, "image/png"));
-    if (!out) throw new Error("blob");
-    const url = URL.createObjectURL(out);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `SAUNA道-アバター-${today()}.png`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    await svgToPng(avatarSvg({ exportMode: true }), 260, 260, `SAUNA道-アバター-${today()}.png`);
     toast("アバターを保存しました");
-  } catch (e) {
-    toast("保存できませんでした");
-  }
+  } catch (e) { toast("保存できませんでした"); }
 }
+
+const SVG_F = 'font-family="Hiragino Maru Gothic ProN, Hiragino Sans, Yu Gothic UI, Meiryo, sans-serif"';
+
+/* --- 今年のサマリー --- */
+function yearStats(y) {
+  let visits = 0, sets = 0, newFac = 0, bestN = 0, best = null;
+  let rate = 0, rateN = 0, tot = 0, totN = 0;
+  const prefs = new Set(), facs = new Set();
+  for (const f of facilities) {
+    let n = 0, first = "";
+    for (const v of (f.visits || [])) {
+      if (!v.date) continue;
+      if (!first || v.date < first) first = v.date;
+      if (+v.date.slice(0, 4) === y) {
+        visits++; n++;
+        sets += (+v.sets || 0);
+        if (v.totonoi > 0) { tot += v.totonoi; totN++; }
+        if (f.prefecture) prefs.add(f.prefecture);
+        facs.add(f.id);
+      }
+    }
+    if (n > bestN) { bestN = n; best = f; }
+    if (n && f.rating > 0) { rate += f.rating; rateN++; }
+    if (first && +first.slice(0, 4) === y) newFac++;
+  }
+  return { y, visits, sets, newFac, best, bestN, prefs: prefs.size, facs: facs.size,
+           avg: rateN ? rate / rateN : 0, tot: totN ? tot / totN : 0 };
+}
+function summarySvg(s) {
+  const row = (i, k, v) => `
+    <rect x="46" y="${268 + i * 74}" width="468" height="62" rx="18" fill="#ffffff" opacity=".82"/>
+    <text x="72" y="${306 + i * 74}" ${SVG_F} font-size="19" font-weight="700" fill="#998486">${k}</text>
+    <text x="488" y="${308 + i * 74}" text-anchor="end" ${SVG_F} font-size="26" font-weight="800" fill="#57444A">${v}</text>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 760">
+    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD9E7"/><stop offset="55%" stop-color="#FFEFE7"/><stop offset="100%" stop-color="#FFF5F3"/>
+    </linearGradient></defs>
+    <rect width="560" height="760" fill="url(#sg)"/>
+    <text x="280" y="82" text-anchor="middle" ${SVG_F} font-size="38" font-weight="800" fill="#D5507B">SAUNA道</text>
+    <text x="280" y="120" text-anchor="middle" ${SVG_F} font-size="19" font-weight="800" fill="#998486" letter-spacing="4">${s.y} 年のサ活</text>
+    <text x="280" y="212" text-anchor="middle" ${SVG_F} font-size="82" font-weight="800" fill="#EF6E96">${s.visits}</text>
+    <text x="280" y="244" text-anchor="middle" ${SVG_F} font-size="17" font-weight="700" fill="#998486">回 ととのいました</text>
+    ${row(0, "行ったサウナ", s.facs + " 軒")}
+    ${row(1, "新しく開拓", s.newFac + " 軒")}
+    ${row(2, "まわった県", s.prefs + " 県")}
+    ${row(3, "のべセット数", (s.sets || "—") + (s.sets ? " セット" : ""))}
+    ${row(4, "平均のととのい度", s.tot ? s.tot.toFixed(1) : "—")}
+    ${row(5, "いちばん通った", best2(s))}
+    <text x="280" y="726" text-anchor="middle" ${SVG_F} font-size="14" font-weight="700" fill="#C6B2B1">ととのった数だけ、日本が色づく</text>
+  </svg>`;
+}
+function best2(s) {
+  if (!s.best) return "—";
+  const nm = s.best.name.length > 11 ? s.best.name.slice(0, 11) + "…" : s.best.name;
+  return esc(nm) + " " + s.bestN + "回";
+}
+async function saveSummary() {
+  const y = new Date().getFullYear();
+  const s = yearStats(y);
+  if (!s.visits) { toast(`${y}年の記録が まだありません`); return; }
+  toast("画像を作っています…");
+  try {
+    await svgToPng(summarySvg(s), 560, 760, `SAUNA道-${y}年のサマリー.png`, 2);
+    toast("サマリーを保存しました");
+  } catch (e) { toast("保存できませんでした"); }
+}
+
+/* --- 施設ごとの サ活カード --- */
+function cardSvg(f) {
+  const ph = (f.photos || [])[0] || "";
+  const n = (f.visits || []).length;
+  const stars = "★".repeat(f.rating || 0) + "☆".repeat(5 - (f.rating || 0));
+  const nm = f.name.length > 15 ? f.name.slice(0, 15) + "…" : f.name;
+  const ad = addrLine(f);
+  const memo = (f.memo || "").slice(0, 46);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 700">
+    <defs><clipPath id="pc"><rect x="40" y="150" width="480" height="290" rx="24"/></clipPath></defs>
+    <rect width="560" height="700" fill="#FFF5F3"/>
+    <rect x="20" y="20" width="520" height="660" rx="34" fill="#ffffff"/>
+    <text x="280" y="72" text-anchor="middle" ${SVG_F} font-size="15" font-weight="800" fill="#D5507B" letter-spacing="5">SAUNA道</text>
+    <text x="280" y="118" text-anchor="middle" ${SVG_F} font-size="30" font-weight="800" fill="#57444A">${esc(nm)}</text>
+    ${ph ? `<image href="${ph}" xlink:href="${ph}" x="40" y="150" width="480" height="290"
+              preserveAspectRatio="xMidYMid slice" clip-path="url(#pc)"/>`
+         : `<rect x="40" y="150" width="480" height="290" rx="24" fill="#FFE6EE"/>
+            <text x="280" y="305" text-anchor="middle" ${SVG_F} font-size="20" font-weight="700" fill="#D8A9B6">写真はまだありません</text>`}
+    <text x="280" y="500" text-anchor="middle" ${SVG_F} font-size="34" fill="#E2A857">${stars}</text>
+    <text x="280" y="546" text-anchor="middle" ${SVG_F} font-size="20" font-weight="800" fill="#EF6E96">通算 ${n} 回ととのいました</text>
+    <text x="280" y="586" text-anchor="middle" ${SVG_F} font-size="15" font-weight="700" fill="#998486">${esc(ad.slice(0, 30))}</text>
+    ${memo ? `<text x="280" y="626" text-anchor="middle" ${SVG_F} font-size="15" fill="#998486">${esc(memo)}</text>` : ""}
+  </svg>`;
+}
+async function saveCard(id) {
+  const f = facilities.find(x => x.id === id);
+  if (!f) return;
+  toast("画像を作っています…");
+  try {
+    await svgToPng(cardSvg(f), 560, 700, `SAUNA道-${f.name}.png`, 2);
+    toast("サ活カードを保存しました");
+  } catch (e) { toast("保存できませんでした"); }
+}
+
+/* --- 現在地からさがす --- */
+function findNearby() {
+  if (!navigator.geolocation) { toast("この端末では現在地を使えません"); return; }
+  toast("現在地をしらべています…");
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const { latitude, longitude } = pos.coords;
+      const url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=ja"
+                + "&lat=" + latitude + "&lon=" + longitude;
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const j = await res.json();
+      const txt = JSON.stringify(j.address || {}) + (j.display_name || "");
+      const pref = PREF_FLAT.find(p => txt.indexOf(p) >= 0);
+      if (!pref) { toast("いまいる都道府県が わかりませんでした"); return; }
+      const a = j.address || {};
+      nearCity = a.city || a.town || a.village || a.county || "";
+      setFindPref(pref);
+      toast(`${pref}${nearCity ? " " + nearCity : ""} のサウナです`);
+    } catch (e) { toast("現在地からさがせませんでした") }
+  }, () => toast("現在地の許可が必要です"), { timeout: 12000, maximumAge: 300000 });
+}
+let nearCity = "";
 
 function renderHome() {
   $("avatar").innerHTML = avatarSvg();
@@ -1695,9 +1969,11 @@ function renderHome() {
 
   const vis0 = summary().vis;
   const lv = levelOf(vis0);
+  const away = daysSinceLast();
   $("lvl").innerHTML = `<span class="lvt">${lv.cur.t}</span>` +
-    (lv.next ? `<span class="lvn">あと ${lv.next.n - vis0} 回で ${lv.next.t}</span>`
-             : `<span class="lvn">最高位に とうたつ！</span>`);
+    (away > 14 ? `<span class="lvn sad">${away}日 行っていません…しょんぼり</span>`
+     : lv.next ? `<span class="lvn">あと ${lv.next.n - vis0} 回で ${lv.next.t}</span>`
+               : `<span class="lvn">最高位に とうたつ！</span>`);
 
   const owned = ownedCount(), vis = summary().vis;
   if (owned >= ITEMS.length) {
@@ -1708,15 +1984,24 @@ function renderHome() {
     $("nx-msg").innerHTML = `あと <b class="num">${ITEM_STEP - done}</b> 回のスタンプで つぎのアイテム`;
     $("nx-bar").style.width = (done / ITEM_STEP * 100) + "%";
   }
-  $("item-count").textContent = `　${owned} / ${ITEMS.length}`;
-  $("items").innerHTML = ITEMS.map((it, i) => {
-    if (i >= owned) {
-      return `<div class="item lock"><span class="lk">🔒</span><span>あと${(i + 1) * ITEM_STEP - vis}回</span></div>`;
-    }
-    const on = profile.equip[it.slot] === it.id;
-    return `<button class="item ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
-      <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
-  }).join("");
+  $("item-count").textContent = `　${owned}/${ITEMS.length}・レア ${(profile.rare || []).length}/${RARE.length}`;
+  $("items").innerHTML =
+    ITEMS.map((it, i) => {
+      if (i >= owned) {
+        return `<div class="item lock"><span class="lk">🔒</span><span>あと${(i + 1) * ITEM_STEP - vis}回</span></div>`;
+      }
+      const on = profile.equip[it.slot] === it.id;
+      return `<button class="item ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
+        <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
+    }).join("") +
+    RARE.map(it => {
+      if (!hasItem(it)) {
+        return '<div class="item lock rare"><span class="lk">🎫</span><span>くじで</span></div>';
+      }
+      const on = profile.equip[it.slot] === it.id;
+      return `<button class="item rare ${on ? "on" : ""}" data-item="${it.id}" aria-pressed="${on}">
+        <svg viewBox="${it.vb}">${it.svg}</svg><span>${esc(it.nm)}</span></button>`;
+    }).join("");
 
   const rows = facilities
     .filter(f => (f.visits || []).length)
@@ -1835,17 +2120,9 @@ function renderStamp() {
       if (n > 0) tgDone[f.prefecture] = (tgDone[f.prefecture] || 0) + 1;
     }
   }
-  $("prefmap").innerHTML = PREFS.map(([region, list]) => {
-    const got = list.filter(p => count[p]).length;
-    return `<div class="region">
-      <h3>${region}<em>${got} / ${list.length}</em></h3>
-      <div class="pgrid">${list.map(p => `
-        <button class="pref ${count[p] ? "got" : ""}" data-pref="${esc(p)}">
-          ${tgAll[p] && tgDone[p] === tgAll[p] ? '<span class="done2">✓</span>' : ""}
-          <span>${esc(p.replace(/[都道府県]$/, ""))}</span>
-          <b>${count[p] ? count[p] : "–"}</b>
-        </button>`).join("")}</div></div>`;
-  }).join("");
+  $("jpmap").innerHTML = jpMapSvg(count, tgAll, tgDone);
+  $("heat").innerHTML = heatmapSvg();
+  $("monthly").innerHTML = monthlySvg();
 
   $("badges").innerHTML = BADGES.map(b => {
     const ok = b.ok(s);
@@ -1865,7 +2142,14 @@ function renderFind() {
       if (q && !norm(c.n + c.p + (c.a || "") + (YOMI[c.p] || "")).includes(q)) return false;
       return true;
     })
-    .sort((a, b) => PREF_FLAT.indexOf(a.c.p) - PREF_FLAT.indexOf(b.c.p));
+    .sort((a, b) => {
+      if (nearCity) {                              // 現在地の市区町村を先に出す
+        const an = (a.c.a || "").indexOf(nearCity) >= 0 ? 0 : 1;
+        const bn = (b.c.a || "").indexOf(nearCity) >= 0 ? 0 : 1;
+        if (an !== bn) return an - bn;
+      }
+      return PREF_FLAT.indexOf(a.c.p) - PREF_FLAT.indexOf(b.c.p);
+    });
 
   const already = new Set(facilities.map(f => norm(f.name) + "|" + f.prefecture));
   const target = pref || guessPref(findFilter.q);
@@ -1937,6 +2221,111 @@ async function addFromCatalog(i) {
   } catch (e) {
     toast(`「${c.n}」を追加しました（今は住所をしらべられません）`);
   }
+}
+
+/* ============ 日本地図・カレンダー・グラフ ============ */
+/* 都道府県を日本の形に近いマス目に並べた座標 [列, 行] */
+const MAP_XY = {
+  "北海道":[10,0],
+  "青森県":[9,2],
+  "秋田県":[8,3],"岩手県":[9,3],
+  "山形県":[8,4],"宮城県":[9,4],
+  "新潟県":[7,5],"福島県":[8,5],
+  "石川県":[5,6],"富山県":[6,6],"長野県":[7,6],"群馬県":[8,6],"栃木県":[9,6],"茨城県":[10,6],
+  "鳥取県":[3,7],"兵庫県":[4,7],"京都府":[5,7],"福井県":[6,7],"岐阜県":[7,7],"山梨県":[8,7],"埼玉県":[9,7],"千葉県":[10,7],
+  "島根県":[3,8],"岡山県":[4,8],"大阪府":[5,8],"滋賀県":[6,8],"愛知県":[7,8],"静岡県":[8,8],"東京都":[9,8],
+  "山口県":[2,9],"広島県":[3,9],"香川県":[4,9],"奈良県":[5,9],"三重県":[6,9],"神奈川県":[9,9],
+  "福岡県":[2,10],"愛媛県":[3,10],"徳島県":[4,10],"和歌山県":[5,10],
+  "佐賀県":[1,11],"大分県":[2,11],"高知県":[3,11],
+  "長崎県":[1,12],"熊本県":[2,12],"宮崎県":[3,12],
+  "鹿児島県":[2,13],
+  "沖縄県":[0,13]
+};
+const abbr2 = p => p.replace(/[都道府県]$/, "").slice(0, 2);
+
+function jpMapSvg(count, tgAll, tgDone) {
+  const C = 30, G = 2.4, cols = 11, rows = 14;
+  const cells = PREF_FLAT.map(p => {
+    const xy = MAP_XY[p]; if (!xy) return "";
+    const x = xy[0] * C, y = xy[1] * C;
+    const n = count[p] || 0;
+    const done = tgAll[p] && tgDone[p] === tgAll[p];
+    const fill = n ? (n >= 3 ? "#EF6E96" : n === 2 ? "#F79BB8" : "#FFC3D6") : "#FFFFFF";
+    const tx = n >= 2 ? "#ffffff" : n ? "#A83660" : "#C6B2B1";
+    return `<g data-pref="${esc(p)}" style="cursor:pointer">
+      <rect x="${x + G}" y="${y + G}" width="${C - G * 2}" height="${C - G * 2}" rx="7"
+            fill="${fill}" stroke="${n ? "none" : "#F5E1E3"}" stroke-width="1.5"/>
+      <text x="${x + C / 2}" y="${y + C / 2 + 3.4}" text-anchor="middle"
+            font-size="9.4" font-weight="800" fill="${tx}">${esc(abbr2(p))}</text>
+      ${done ? `<circle cx="${x + C - G - 4}" cy="${y + G + 4}" r="3.4" fill="#5FBF7D"/>` : ""}
+    </g>`;
+  }).join("");
+  return `<svg class="jp" viewBox="0 0 ${cols * C} ${rows * C}" role="img" aria-label="日本地図">${cells}</svg>`;
+}
+
+/* 1年ぶんのカレンダー（行った日が濃くなる） */
+function heatmapSvg() {
+  const cnt = {};
+  for (const f of facilities) for (const v of (f.visits || [])) if (v.date) cnt[v.date] = (cnt[v.date] || 0) + 1;
+  const end = new Date(); end.setHours(0, 0, 0, 0);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 7 * 52 - end.getDay());
+  const C = 11, R = 10;
+  let out = "", labels = "", w = 0, lastM = -1;
+  const d = new Date(start);
+  for (let col = 0; col <= 52; col++) {
+    for (let row = 0; row < 7; row++) {
+      if (d > end) break;
+      const key = new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+      const n = cnt[key] || 0;
+      const fill = n >= 3 ? "#D5507B" : n === 2 ? "#EF6E96" : n === 1 ? "#FFB3CB" : "#F7E7E8";
+      out += `<rect x="${col * C}" y="${row * R}" width="${C - 2}" height="${R - 2}" rx="2.4" fill="${fill}"><title>${key} ${n}回</title></rect>`;
+      if (row === 0 && d.getMonth() !== lastM) {
+        lastM = d.getMonth();
+        labels += `<text x="${col * C}" y="84" font-size="8.5" fill="#998486" font-weight="700">${lastM + 1}月</text>`;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    w = (col + 1) * C;
+  }
+  return `<svg viewBox="0 0 ${w} 90" width="${w}" height="90" role="img" aria-label="サ活カレンダー">${out}${labels}</svg>`;
+}
+
+/* 直近12か月の回数と ととのい度 */
+function monthlyData() {
+  const now = new Date(), rows = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    rows.push({ y: d.getFullYear(), m: d.getMonth() + 1, n: 0, tSum: 0, tN: 0 });
+  }
+  const idx = {};
+  rows.forEach((r, i) => { idx[r.y + "-" + r.m] = i; });
+  for (const f of facilities) for (const v of (f.visits || [])) {
+    if (!v.date) continue;
+    const p = v.date.split("-");
+    const k = (+p[0]) + "-" + (+p[1]);
+    if (!(k in idx)) continue;
+    const r = rows[idx[k]];
+    r.n++;
+    if (v.totonoi > 0) { r.tSum += v.totonoi; r.tN++; }
+  }
+  return rows;
+}
+function monthlySvg() {
+  const rows = monthlyData();
+  const max = Math.max(1, ...rows.map(r => r.n));
+  const W = 26, H = 96;
+  const bars = rows.map((r, i) => {
+    const h = Math.round(r.n / max * (H - 26));
+    const avg = r.tN ? r.tSum / r.tN : 0;
+    const fill = !r.n ? "#F5E1E3" : avg >= 4 ? "#EF6E96" : avg >= 3 ? "#F79BB8" : avg > 0 ? "#FFC9DC" : "#E2A857";
+    return `<g>
+      <rect x="${i * W + 5}" y="${H - 18 - h}" width="${W - 10}" height="${Math.max(h, 2)}" rx="4" fill="${fill}"/>
+      ${r.n ? `<text x="${i * W + W / 2}" y="${H - 22 - h}" text-anchor="middle" font-size="8.6" font-weight="800" fill="#998486">${r.n}</text>` : ""}
+      <text x="${i * W + W / 2}" y="${H - 5}" text-anchor="middle" font-size="8.4" fill="#998486" font-weight="700">${r.m}</text>
+    </g>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${rows.length * W} ${H}" role="img" aria-label="月ごとのサ活">${bars}</svg>`;
 }
 
 /* 「目標」に入れている施設か（古い記録は目標あつかい） */
@@ -2050,11 +2439,19 @@ function openDetail(id) {
       ${f.memo ? `<div class="i">${ico("note")}<span class="v"><span class="k">メモ</span><span style="white-space:pre-wrap">${esc(f.memo)}</span></span></div>` : ""}
     </div>
 
+    <button class="btn mizu" data-savecard="${f.id}" style="width:100%;margin-top:10px">サ活カードを画像で保存</button>
+
     <div class="sec">ととのいの記録</div>
     ${visits.length
       ? visits.map((v, i) => `<div class="visit">
           <div class="n">${visits.length - i}</div>
-          <div style="flex:1;min-width:0"><div class="d">${fmtDate(v.date)}</div>${v.memo ? `<div class="m">${esc(v.memo)}</div>` : ""}</div>
+          <div style="flex:1;min-width:0"><div class="d">${fmtDate(v.date)}</div>
+            ${(v.totonoi || v.sets || v.water) ? `<div class="vmeta">${[
+              v.totonoi ? "ととのい " + "●".repeat(v.totonoi) : "",
+              v.sets ? v.sets + "セット" : "",
+              v.water ? "水風呂 " + esc(v.water) + "℃" : ""
+            ].filter(Boolean).join("　")}</div>` : ""}
+            ${v.memo ? `<div class="m">${esc(v.memo)}</div>` : ""}</div>
           <button class="del" data-delvisit="${esc(v.id)}" aria-label="この記録を削除">${ico("trash")}</button>
         </div>`).join("")
       : '<p style="color:var(--sub);font-size:13.5px;padding:2px">まだ記録がありません。行ったら「スタンプを押す」でこの旅に刻みましょう。</p>'}
@@ -2156,23 +2553,35 @@ async function saveEdit() {
 }
 
 /* ============ スタンプ ============ */
+let visitDraft = { totonoi: 0, sets: 0 };
+function paintVisitChips() {
+  document.querySelectorAll("#v-tot button").forEach(b => b.classList.toggle("on", +b.dataset.tot <= visitDraft.totonoi));
+  document.querySelectorAll("#v-sets button").forEach(b => b.classList.toggle("on", +b.dataset.sets === visitDraft.sets));
+}
 function openVisit(id) {
   visitTargetId = id;
   const f = facilities.find(x => x.id === id);
   $("v-facname").textContent = f ? f.name : "";
   $("v-date").value = today();
   $("v-memo").value = "";
+  $("v-water").value = "";
+  visitDraft = { totonoi: 0, sets: 0 };
+  paintVisitChips();
   open_("sh-visit");
 }
 async function saveProfile() { try { await Store.put(profile); } catch (e) { /* 保存できなくても続ける */ } }
 
-async function addVisit(id, date, memo) {
+async function addVisit(id, date, memo, extra) {
   const f = facilities.find(x => x.id === id);
   if (!f) return null;
+  const ex2 = extra || {};
   const before = new Set(facilities.filter(x => (x.visits || []).length > 0 && x.prefecture).map(x => x.prefecture));
   const beforeItems = ownedCount();
   const beforeTk = ticketsEarned();
-  f.visits = (f.visits || []).concat([{ id: uid(), date: date || today(), memo: memo || "" }]);
+  f.visits = (f.visits || []).concat([{
+    id: uid(), date: date || today(), memo: memo || "",
+    totonoi: +ex2.totonoi || 0, sets: +ex2.sets || 0, water: ex2.water || ""
+  }]);
   f.updatedAt = Date.now();
   await Store.put(f);
 
@@ -2221,7 +2630,9 @@ function afterVisit(r) {
 }
 
 async function saveVisit() {
-  const r = await addVisit(visitTargetId, $("v-date").value, $("v-memo").value.trim());
+  const r = await addVisit(visitTargetId, $("v-date").value, $("v-memo").value.trim(), {
+    totonoi: visitDraft.totonoi, sets: visitDraft.sets, water: $("v-water").value.trim()
+  });
   if (!r) return;
   close_("sh-visit");
   renderAll();
@@ -2264,6 +2675,9 @@ async function importJSON(file) {
     if (data.profile) {
       if (data.profile.equip) profile.equip = data.profile.equip;
       if (typeof data.profile.usedTickets === "number") profile.usedTickets = data.profile.usedTickets;
+      if (Array.isArray(data.profile.rare)) profile.rare = data.profile.rare;
+      if (data.profile.missions) profile.missions = data.profile.missions;
+      if (typeof data.profile.bonus === "number") profile.bonus = data.profile.bonus;
       await saveProfile();
     }
     renderAll();
@@ -2286,20 +2700,24 @@ document.addEventListener("click", async ev => {
 
   if (hit("[data-newfac]")) { openEdit(null); return; }
 
-  if (hit("[data-usetk]")) {
-    if (!ticketsLeft()) return;
-    if (!confirm("ワタル君の無料券を1枚つかいますか？")) return;
-    profile.usedTickets = (profile.usedTickets || 0) + 1;
+  if (hit("[data-usetk]")) { await drawGacha(); return; }
+
+  if (hit("[data-mission]")) {
+    const ms = missionState();
+    if (!ms.ready) return;
+    profile.missions = profile.missions || {};
+    profile.missions[ms.wk] = 1;
+    profile.bonus = (profile.bonus || 0) + 1;
     await saveProfile();
     renderHome();
-    toast(`つかいました。のこり ${ticketsLeft()} 枚`);
+    ticketBurst(1);
     return;
   }
 
   const itb = hit("[data-item]");
   if (itb) {
-    const it = ITEMS.find(x => x.id === itb.dataset.item);
-    if (!it) return;
+    const it = ALL_ITEMS.find(x => x.id === itb.dataset.item);
+    if (!it || !hasItem(it)) return;
     const wearing = profile.equip[it.slot] === it.id;
     profile.equip[it.slot] = wearing ? "" : it.id;
     await saveProfile();
@@ -2371,6 +2789,11 @@ document.addEventListener("click", async ev => {
     renderList();
     return;
   }
+  const tb = hit("#v-tot button");
+  if (tb) { const v = +tb.dataset.tot; visitDraft.totonoi = (visitDraft.totonoi === v ? 0 : v); paintVisitChips(); return; }
+  const sb2 = hit("#v-sets button");
+  if (sb2) { const v = +sb2.dataset.sets; visitDraft.sets = (visitDraft.sets === v ? 0 : v); paintVisitChips(); return; }
+
   const sb = hit(".starin button");
   if (sb && editing) {
     const key = sb.closest(".starin").dataset.star;
@@ -2387,6 +2810,9 @@ document.addEventListener("click", async ev => {
   if (vw) { $("viewer-img").src = vw.getAttribute("src"); $("viewer").classList.add("on"); return; }
   if (hit("#viewer")) { $("viewer").classList.remove("on"); return; }
   if (hit("#burst")) { $("burst").classList.remove("on"); return; }
+
+  const sc = hit("[data-savecard]");
+  if (sc) { await saveCard(sc.dataset.savecard); return; }
 
   if (hit("#d-visit")) { openVisit(detailId); return; }
   if (hit("#d-edit")) { openEdit(detailId); return; }
@@ -2405,6 +2831,8 @@ document.addEventListener("click", async ev => {
 
 $("fab").onclick = () => openEdit(null, filter.pref);
 $("av-save").onclick = saveAvatarImage;
+$("sum-save").onclick = saveSummary;
+$("fd-near").onclick = findNearby;
 $("e-save").onclick = saveEdit;
 $("v-save").onclick = saveVisit;
 
@@ -2555,7 +2983,7 @@ $("b-clear").onclick = async () => {
   if (!confirm("本当によろしいですか？（先にバックアップの保存をおすすめします）")) return;
   await Store.clear();
   facilities = [];
-  profile = { id: PROFILE_ID, equip: {}, usedTickets: 0 };
+  profile = { id: PROFILE_ID, equip: {}, usedTickets: 0, rare: [], missions: {}, bonus: 0 };
   await saveProfile();
   renderAll(); toast("すべての記録を削除しました");
 };
@@ -2578,6 +3006,9 @@ document.addEventListener("keydown", e => {
   profile = rows.find(r => r.id === PROFILE_ID) || { id: PROFILE_ID, equip: {}, usedTickets: 0 };
   if (!profile.equip) profile.equip = {};
   if (typeof profile.usedTickets !== "number") profile.usedTickets = 0;
+  if (!Array.isArray(profile.rare)) profile.rare = [];
+  if (!profile.missions) profile.missions = {};
+  if (typeof profile.bonus !== "number") profile.bonus = 0;
   facilities = rows.filter(r => r.id !== PROFILE_ID);
   renderAll();
   gotoTab("home");
