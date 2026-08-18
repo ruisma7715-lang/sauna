@@ -1141,13 +1141,12 @@ function levelOf(vis) {
 }
 
 /* 県を制覇するほど なかまが増える */
+/* need は「行った施設の数」 */
 const FRIENDS = [
   { id:"hiro",   need:0,  nm:"ヒロちゃん", hair:"#3A2A22", shirt:"#E5738F", skin:"#FBD9C0" },
-  { id:"miyo",   need:5,  nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
-  { id:"yuka",   need:10, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
-  { id:"tmp4",   need:20, nm:"（4人目）",  hair:"#1D1D24", shirt:"#4E8C5A", skin:"#E7B790" },
-  { id:"tmp5",   need:30, nm:"（5人目）",  hair:"#5A4238", shirt:"#8B7BC7", skin:"#F2C6A6" },
-  { id:"wataru", need:47, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
+  { id:"miyo",   need:10, nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
+  { id:"yuka",   need:30, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
+  { id:"wataru", need:60, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
 ];
 const WATARU_F = FRIENDS.find(f => f.id === "wataru");
 
@@ -1627,14 +1626,14 @@ function renderTickets() {
 }
 
 function renderFriends() {
-  const p = summary().pref;
-  const got = FRIENDS.filter(f => p >= f.need).length;
+  const n = summary().fac;                    // 行った施設の数
+  const got = FRIENDS.filter(f => n >= f.need).length;
   $("fr-count").textContent = `　${got} / ${FRIENDS.length}`;
   $("friends").innerHTML = FRIENDS.map(f => {
-    const ok = p >= f.need;
+    const ok = n >= f.need;
     return `<div class="fr ${ok ? "" : "lock"}">
       ${ok ? wataru("sm", f) : '<div class="frlock">？</div>'}
-      <span>${ok ? esc(f.nm) : f.need + "県で"}</span>
+      <span>${ok ? esc(f.nm) : "あと" + (f.need - n) + "軒"}</span>
     </div>`;
   }).join("");
 }
