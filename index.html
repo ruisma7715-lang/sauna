@@ -111,6 +111,25 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
 .tk .tkn b{font-size:27px;color:#D08A22;font-variant-numeric:tabular-nums}
 .tk .tkd{font-size:11px;color:var(--sub);margin-top:2px}
 .tk .tkd b{color:#B27C29;font-size:13px}
+/* ---- サ活レベル・なかま・保存 ---- */
+.lvl{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:10px}
+.lvl .lvt{font-family:var(--f-disp);font-size:16px;font-weight:800;color:var(--sakura-d);
+  background:var(--sakura-lt);border-radius:99px;padding:4px 16px}
+.lvl .lvn{font-size:11px;color:var(--sub);font-weight:700}
+.avsave{margin-top:12px;width:100%}
+.friends{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+@media(min-width:520px){.friends{grid-template-columns:repeat(6,1fr)}}
+.fr{background:var(--card);border-radius:16px;padding:8px 4px 7px;box-shadow:var(--sh);
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+.fr span{font-size:10px;font-weight:800;font-family:var(--f-disp);color:var(--sub);text-align:center}
+.fr.lock{background:var(--ground2);box-shadow:none}
+.fr .frlock{width:58px;height:60px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-disp);font-size:24px;font-weight:800;color:var(--dim)}
+.av .sw{transform-box:fill-box;transform-origin:center;animation:av-sweat 2.6s ease-in-out infinite}
+.av .sw2{animation-delay:.7s}
+.av .sw3{animation-delay:1.4s}
+@keyframes av-sweat{0%{opacity:0;transform:translateY(-4px) scale(.6)}25%{opacity:.95}
+  100%{opacity:0;transform:translateY(14px) scale(1)}}
 .nextitem{margin-top:12px}
 .nextitem .nx{font-family:var(--f-disp);font-size:13px;font-weight:800;color:var(--sakura-d);margin-bottom:7px}
 .nextitem .nx b{font-size:19px}
@@ -596,11 +615,16 @@ nav button.on .icon{stroke-width:2.3}
     <div class="avatarcard">
       <div id="avatar"></div>
       <div id="buddyslot"></div>
+      <div class="lvl" id="lvl"></div>
       <div class="nextitem">
         <div class="nx" id="nx-msg"></div>
         <div class="track"><i id="nx-bar" style="width:0%"></i></div>
       </div>
+      <button class="btn mizu avsave" id="av-save">アバターを画像で保存</button>
     </div>
+
+    <div class="sec">なかま<span class="cnt" id="fr-count"></span></div>
+    <div class="friends" id="friends"></div>
 
     <div id="ticket"></div>
 
@@ -810,8 +834,9 @@ nav button.on .icon{stroke-width:2.3}
     </div>
     <div class="two">
       <div class="field"><label>料金（円）</label><input type="number" id="e-price" inputmode="numeric" placeholder="1200"></div>
-      <div class="field"><label>営業時間</label><input type="text" id="e-hours" placeholder="10:00〜24:00"></div>
+      <div class="field"><label>サウナ室の温度（℃）</label><input type="number" id="e-temp" inputmode="numeric" placeholder="100"></div>
     </div>
+    <div class="field"><label>営業時間</label><input type="text" id="e-hours" placeholder="10:00〜24:00"></div>
     <div class="field"><label>住所</label><input type="text" id="e-addr" placeholder="静岡県静岡市駿河区…" autocomplete="off"></div>
     <div class="two">
       <div class="field"><label>電話番号</label><input type="tel" id="e-tel" placeholder="054-000-0000"></div>
@@ -996,7 +1021,59 @@ const AV_TORSO = `
 const AV_HANDS = `
   <circle cx="50" cy="164" r="9" fill="#F8CDB3"/>
   <circle cx="150" cy="164" r="9" fill="#F8CDB3"/>`;
-const AV_HEAD = `
+
+/* 記録したサウナ室の温度が高いほど 汗が増える */
+function avgTemp() {
+  const a = facilities.filter(f => +f.temp > 0);
+  return a.length ? a.reduce((s, f) => s + (+f.temp), 0) / a.length : 0;
+}
+function sweatCount() {
+  const t = avgTemp();
+  return t >= 110 ? 3 : t >= 100 ? 2 : t >= 90 ? 1 : 0;
+}
+const SWEAT_POS = [[133, 56], [69, 62], [127, 74]];
+function sweatSvg() {
+  return SWEAT_POS.slice(0, sweatCount()).map(([x, y], i) =>
+    `<path class="sw sw${i + 1}" d="M${x} ${y}q4.5 7 4.5 10.5a4.5 4.5 0 0 1-9 0Q${x} ${y + 7} ${x} ${y}z" fill="#8FD8E6" opacity=".9"/>`
+  ).join("");
+}
+
+/* 頭。mode="totonoi" のときは ととのい顔になる */
+function avHead(mode) {
+  const totonoi = mode === "totonoi";
+  const eyes = totonoi ? `
+    <path d="M80 65l8 6-8 6M120 65l-8 6 8 6" fill="none" stroke="#3A2620" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`
+  : `
+    <ellipse cx="88" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
+    <ellipse cx="112" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
+    <ellipse cx="88" cy="70.5" rx="8.2" ry="9.2" fill="#FBF6F2"/>
+    <ellipse cx="112" cy="70.5" rx="8.2" ry="9.2" fill="#FBF6F2"/>
+    <circle cx="88.4" cy="71" r="6.6" fill="url(#irisG)"/>
+    <circle cx="112.4" cy="71" r="6.6" fill="url(#irisG)"/>
+    <circle cx="88.4" cy="71" r="6.6" fill="none" stroke="#2B1A0E" stroke-width="1.4" opacity=".75"/>
+    <circle cx="112.4" cy="71" r="6.6" fill="none" stroke="#2B1A0E" stroke-width="1.4" opacity=".75"/>
+    <circle cx="88.4" cy="71" r="2.9" fill="#1B120C"/>
+    <circle cx="112.4" cy="71" r="2.9" fill="#1B120C"/>
+    <circle cx="91" cy="67.8" r="2.4" fill="#ffffff"/>
+    <circle cx="115" cy="67.8" r="2.4" fill="#ffffff"/>
+    <circle cx="85.4" cy="73.6" r="1.3" fill="#ffffff" opacity=".7"/>
+    <circle cx="109.4" cy="73.6" r="1.3" fill="#ffffff" opacity=".7"/>
+    <path d="M79 66q9-7 17-2" fill="none" stroke="#3A2620" stroke-width="3.1" stroke-linecap="round"/>
+    <path d="M104 64q8-5 17 2" fill="none" stroke="#3A2620" stroke-width="3.1" stroke-linecap="round"/>
+    <path d="M81.5 76.5q6 3.4 12.4 1" fill="none" stroke="#C08D74" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
+    <path d="M106 77.5q6 2.6 12.4-1" fill="none" stroke="#C08D74" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
+    <ellipse class="lid" cx="88" cy="70" rx="8.8" ry="10.2" fill="url(#skinG)"/>
+    <ellipse class="lid" cx="112" cy="70" rx="8.8" ry="10.2" fill="url(#skinG)"/>`;
+
+  const mouth = totonoi ? `
+    <ellipse cx="100" cy="87" rx="6.4" ry="5.6" fill="#C9455C"/>
+    <path d="M95.5 85q4.5-2 9 0" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".45"/>`
+  : `
+    <path d="M100 84q-6 .8-6 4t6 6.4q6-3.2 6-6.4t-6-4z" fill="#DE6076"/>
+    <path d="M94.4 87.6q5.6-2.6 11.2 0" fill="none" stroke="#B54A5F" stroke-width="1.4" stroke-linecap="round"/>
+    <ellipse cx="97.8" cy="91" rx="2.3" ry="1.1" fill="#ffffff" opacity=".42"/>`;
+
+  return `
   <path d="M64 66c0-26 16-46 36-46s36 20 36 46v30c0 7-5 12-12 12H76c-7 0-12-5-12-12z" fill="url(#hairG)"/>
   <path d="M92 90h16v16H92z" fill="#EFC0A6"/>
   <path d="M92 90h16v8q-8 5-16 0z" fill="#D9A388"/>
@@ -1004,33 +1081,12 @@ const AV_HEAD = `
   <path d="M68 66a32 34 0 0 0 64 0v4a32 34 0 0 1-64 0z" fill="#E0A98D" opacity=".2"/>
   <circle cx="69" cy="72" r="6.5" fill="#F4C4A9"/>
   <circle cx="131" cy="72" r="6.5" fill="#F4C4A9"/>
-  <ellipse cx="88" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
-  <ellipse cx="112" cy="70" rx="8.9" ry="9.9" fill="#E8BBA0" opacity=".45"/>
-  <ellipse cx="88" cy="70.5" rx="8.2" ry="9.2" fill="#FBF6F2"/>
-  <ellipse cx="112" cy="70.5" rx="8.2" ry="9.2" fill="#FBF6F2"/>
-  <circle cx="88.4" cy="71" r="6.6" fill="url(#irisG)"/>
-  <circle cx="112.4" cy="71" r="6.6" fill="url(#irisG)"/>
-  <circle cx="88.4" cy="71" r="6.6" fill="none" stroke="#2B1A0E" stroke-width="1.4" opacity=".75"/>
-  <circle cx="112.4" cy="71" r="6.6" fill="none" stroke="#2B1A0E" stroke-width="1.4" opacity=".75"/>
-  <circle cx="88.4" cy="71" r="2.9" fill="#1B120C"/>
-  <circle cx="112.4" cy="71" r="2.9" fill="#1B120C"/>
-  <circle cx="91" cy="67.8" r="2.4" fill="#ffffff"/>
-  <circle cx="115" cy="67.8" r="2.4" fill="#ffffff"/>
-  <circle cx="85.4" cy="73.6" r="1.3" fill="#ffffff" opacity=".7"/>
-  <circle cx="109.4" cy="73.6" r="1.3" fill="#ffffff" opacity=".7"/>
-  <path d="M79 66q9-7 17-2" fill="none" stroke="#3A2620" stroke-width="3.1" stroke-linecap="round"/>
-  <path d="M104 64q8-5 17 2" fill="none" stroke="#3A2620" stroke-width="3.1" stroke-linecap="round"/>
-  <path d="M81.5 76.5q6 3.4 12.4 1" fill="none" stroke="#C08D74" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
-  <path d="M106 77.5q6 2.6 12.4-1" fill="none" stroke="#C08D74" stroke-width="1.3" stroke-linecap="round" opacity=".75"/>
-  <ellipse class="lid" cx="88" cy="70" rx="8.8" ry="10.2" fill="url(#skinG)"/>
-  <ellipse class="lid" cx="112" cy="70" rx="8.8" ry="10.2" fill="url(#skinG)"/>
-  <ellipse cx="78" cy="81" rx="7.2" ry="4.6" fill="#F58AA4" opacity=".38"/>
-  <ellipse cx="122" cy="81" rx="7.2" ry="4.6" fill="#F58AA4" opacity=".38"/>
+  ${eyes}
+  <ellipse cx="78" cy="81" rx="7.2" ry="4.6" fill="#F58AA4" opacity="${totonoi ? ".6" : ".38"}"/>
+  <ellipse cx="122" cy="81" rx="7.2" ry="4.6" fill="#F58AA4" opacity="${totonoi ? ".6" : ".38"}"/>
   <path d="M100 75v5" fill="none" stroke="#E0AA8F" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
   <path d="M97.8 81q2.2 1.8 4.4 0" fill="none" stroke="#D69C7E" stroke-width="1.8" stroke-linecap="round"/>
-  <path d="M100 84q-6 .8-6 4t6 6.4q6-3.2 6-6.4t-6-4z" fill="#DE6076"/>
-  <path d="M94.4 87.6q5.6-2.6 11.2 0" fill="none" stroke="#B54A5F" stroke-width="1.4" stroke-linecap="round"/>
-  <ellipse cx="97.8" cy="91" rx="2.3" ry="1.1" fill="#ffffff" opacity=".42"/>
+  ${mouth}
   <path d="M68 66a32 34 0 0 1 64 0q-8-7-32-7t-32 7z" fill="#C9967B" opacity=".3"/>
   <path d="M66 68a34 34 0 0 1 68 0q-7-13-16-10-9 2.6-18 2.6t-18-2.6q-9-3-16 10z" fill="url(#hairG)"/>
   <path d="M74 64q8-19 26-21" fill="none" stroke="#7A5C4E" stroke-width="1.4" opacity=".5"/>
@@ -1039,7 +1095,67 @@ const AV_HEAD = `
   <path d="M136 68v28q0 8-8 10-3.6-25-2.6-42z" fill="#392A25"/>
   <path d="M71 74q1-24 13-33 3.6 2 2.6 7-9.6 11-10.6 29z" fill="url(#hlG)"/>
   <path d="M129 74q-1-24-13-33-3.6 2-2.6 7 9.6 11 10.6 29z" fill="url(#hlG)"/>
-  <path d="M117 62q3-11 10-15l2.6 5.4q-7 4.4-8.6 12z" fill="url(#hlG)" opacity=".9"/>`;
+  <path d="M117 62q3-11 10-15l2.6 5.4q-7 4.4-8.6 12z" fill="url(#hlG)" opacity=".9"/>
+  ${sweatSvg()}`;
+}
+
+/* 季節と時間帯で空を変える */
+function skyOf() {
+  const d = new Date(), m = d.getMonth() + 1, h = d.getHours();
+  const season = (m === 12 || m <= 2) ? "winter" : m <= 5 ? "spring" : m <= 8 ? "summer" : "autumn";
+  const time = h < 5 ? "night" : h < 9 ? "morning" : h < 16 ? "day" : h < 19 ? "evening" : "night";
+  const SKY = {
+    morning: ["#FFE9D2", "#FFF6EA"],
+    day:     ["#DBEDF8", "#F5FAFE"],
+    evening: ["#FFC8A2", "#FFE2CC"],
+    night:   ["#3F3A5E", "#645D82"]
+  };
+  const SUN = {
+    morning: '<circle cx="158" cy="46" r="16" fill="#FFD9A0" opacity=".95"/>',
+    day:     '<circle cx="162" cy="40" r="15" fill="#FFF4C6" opacity=".85"/>',
+    evening: '<circle cx="156" cy="52" r="18" fill="#FF9E66" opacity=".85"/>',
+    night:   '<circle cx="162" cy="42" r="13" fill="#FFEFB8"/><g fill="#FFE9A8"><circle cx="28" cy="28" r="2.8"/><circle cx="58" cy="16" r="2.2"/><circle cx="112" cy="22" r="2.4"/><circle cx="186" cy="18" r="2"/><circle cx="22" cy="78" r="2"/></g>'
+  };
+  const DECO = {
+    spring: '<g fill="#FFB7D2" opacity=".9"><circle cx="24" cy="52" r="4.5"/><circle cx="46" cy="30" r="3.5"/><circle cx="172" cy="86" r="4"/><circle cx="30" cy="118" r="3"/><circle cx="182" cy="150" r="3.5"/></g>',
+    summer: '<g fill="#ffffff" opacity=".85"><ellipse cx="40" cy="40" rx="22" ry="13"/><ellipse cx="58" cy="34" rx="14" ry="10"/><ellipse cx="24" cy="34" rx="12" ry="9"/></g>',
+    autumn: '<g fill="#E9925A" opacity=".85"><path d="M26 50l7 5-7 5-7-5z"/><path d="M176 96l7 5-7 5-7-5z"/><path d="M34 132l6 4-6 4-6-4z"/></g>',
+    winter: '<g fill="#ffffff" opacity=".95"><circle cx="26" cy="44" r="3.4"/><circle cx="52" cy="24" r="2.6"/><circle cx="176" cy="92" r="3"/><circle cx="34" cy="122" r="2.6"/><circle cx="168" cy="150" r="2.4"/><circle cx="86" cy="18" r="2.4"/></g>'
+  };
+  return { top: SKY[time][0], bot: SKY[time][1], deco: SUN[time] + DECO[season], season, time };
+}
+
+/* サ活レベル */
+const LEVELS = [
+  { n:0, t:"サウナビギナー" }, { n:1, t:"サウナ初心者" }, { n:5, t:"サウナ好き" },
+  { n:15, t:"サウナー" }, { n:30, t:"サウナ通" }, { n:60, t:"ととのいマスター" },
+  { n:100, t:"サウナ仙人" }
+];
+function levelOf(vis) {
+  let cur = LEVELS[0], next = null;
+  for (const L of LEVELS) {
+    if (vis >= L.n) cur = L;
+    else { next = L; break; }
+  }
+  return { cur, next };
+}
+
+/* 県を制覇するほど なかまが増える */
+const FRIENDS = [
+  { need:0,  nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" },
+  { need:5,  nm:"ヒロ君",     hair:"#4A3226", shirt:"#3E6B8E", skin:"#F2C6A6" },
+  { need:10, nm:"マナちゃん", hair:"#6B4A2E", shirt:"#E5738F", skin:"#FBD9C0" },
+  { need:20, nm:"ケン君",     hair:"#1D1D24", shirt:"#4E8C5A", skin:"#E7B790" },
+  { need:30, nm:"ユキちゃん", hair:"#8A6A44", shirt:"#C9A227", skin:"#FCE0CB" },
+  { need:47, nm:"サ神さま",   hair:"#F0EDE6", shirt:"#C9A227", skin:"#FBE0C8" }
+];
+
+let totonoiUntil = 0;
+function setTotonoi() {
+  totonoiUntil = Date.now() + 4200;
+  renderHome();
+  setTimeout(() => { if (Date.now() >= totonoiUntil) renderHome(); }, 4400);
+}
 
 
 const ITEMS = [
@@ -1146,15 +1262,15 @@ const ITEMS = [
 
 /* 相棒のワタル君。5回ととのうごとに無料券をくれる */
 const TICKET_STEP = 5;
-const wataru = cls => `
-  <svg class="buddy ${cls || ""}" viewBox="0 0 100 104" role="img" aria-label="ワタル君">
+const wataru = (cls, f) => `
+  <svg class="buddy ${cls || ""}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" role="img" aria-label="${esc((f && f.nm) || "ワタル君")}">
     <g class="bd">
-      <path d="M22 52c0-17 12-30 28-30s28 13 28 30v18c0 5-3 8-8 8H30c-5 0-8-3-8-8z" fill="#241C1A"/>
-      <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#1E1E22"/>
-      <ellipse cx="50" cy="53" rx="23" ry="24" fill="#F7D4B8"/>
+      <path d="M22 52c0-17 12-30 28-30s28 13 28 30v18c0 5-3 8-8 8H30c-5 0-8-3-8-8z" fill="${(f && f.hair) || "#241C1A"}"/>
+      <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="${(f && f.shirt) || "#1E1E22"}"/>
+      <ellipse cx="50" cy="53" rx="23" ry="24" fill="${(f && f.skin) || "#F7D4B8"}"/>
       <path d="M44 65q6 9 12 0z" fill="#7C3542"/>
       <ellipse class="tongue" cx="50" cy="68" rx="4.6" ry="3.4" fill="#E9697F"/>
-      <path d="M26 52a24 24 0 0 1 48 0q-6-12-12-9-6 2-12 2t-12-2q-6-3-12 9z" fill="#241C1A"/>
+      <path d="M26 52a24 24 0 0 1 48 0q-6-12-12-9-6 2-12 2t-12-2q-6-3-12 9z" fill="${(f && f.hair) || "#241C1A"}"/>
       <path d="M47 50h6" fill="none" stroke="#15100F" stroke-width="4" stroke-linecap="round"/>
       <circle cx="38" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
       <circle cx="62" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
@@ -1174,16 +1290,19 @@ function ticketsLeft() { return Math.max(0, ticketsEarned() - (profile.usedTicke
 
 function ownedCount() { return Math.min(ITEMS.length, Math.floor(summary().vis / ITEM_STEP)); }
 
-function avatarSvg() {
+function avatarSvg(opt) {
+  const ex = opt && opt.exportMode;
+  const sky = skyOf();
+  const mode = (!ex && Date.now() < totonoiUntil) ? "totonoi" : "normal";
   const eq = profile.equip || {};
   const of = slot => ITEMS.find(i => i.id === eq[slot] && ITEMS.indexOf(i) < ownedCount());
   const bg = of("bg"), seat = of("seat"), back = of("back"), tops = of("tops"),
         bottoms = of("bottoms"), shoes = of("shoes"), neck = of("neck"),
         head = of("head"), face = of("face"), hand = of("hand");
-  return `<svg class="av" viewBox="0 0 200 260" role="img" aria-label="あなたのサウナアバター">
+  return `<svg class="av" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" role="img" aria-label="あなたのサウナアバター">
     <defs>
       <linearGradient id="avbg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#FFE6D4"/><stop offset="100%" stop-color="#F6D3BE"/>
+        <stop offset="0%" stop-color="${sky.top}"/><stop offset="100%" stop-color="${sky.bot}"/>
       </linearGradient>
       <radialGradient id="skinG" cx="42%" cy="34%" r="72%">
         <stop offset="0%" stop-color="#FFE7D6"/><stop offset="70%" stop-color="#FBD5BD"/>
@@ -1207,7 +1326,7 @@ function avatarSvg() {
     </defs>
     <g clip-path="url(#avclip)">
       <rect width="200" height="260" fill="url(#avbg)"/>
-      ${bg ? bg.svg : ""}
+      ${bg ? bg.svg : sky.deco}
       ${seat ? seat.svg : ""}
       <g class="chara">
         ${back ? back.svg : ""}
@@ -1217,7 +1336,7 @@ function avatarSvg() {
         ${AV_HANDS}
         ${neck ? neck.svg : ""}
         <g class="headg">
-          ${AV_HEAD}
+          ${ex ? avHead(mode).replace(/<ellipse class="lid"[^>]*\/>/g, "") : avHead(mode)}
           ${head ? head.svg : ""}
           ${face ? face.svg : ""}
         </g>
@@ -1506,10 +1625,59 @@ function renderTickets() {
     </div>`;
 }
 
+function renderFriends() {
+  const p = summary().pref;
+  const got = FRIENDS.filter(f => p >= f.need).length;
+  $("fr-count").textContent = `　${got} / ${FRIENDS.length}`;
+  $("friends").innerHTML = FRIENDS.map(f => {
+    const ok = p >= f.need;
+    return `<div class="fr ${ok ? "" : "lock"}">
+      ${ok ? wataru("sm", f) : '<div class="frlock">？</div>'}
+      <span>${ok ? esc(f.nm) : f.need + "県で"}</span>
+    </div>`;
+  }).join("");
+}
+
+/* 今の姿を画像として書き出す */
+async function saveAvatarImage() {
+  toast("画像を作っています…");
+  const svg = avatarSvg({ exportMode: true });
+  const src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error("svg"));
+      i.src = src;
+    });
+    const S = 3, cv = document.createElement("canvas");
+    cv.width = 200 * S; cv.height = 260 * S;
+    cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+    const out = await new Promise(r => cv.toBlob(r, "image/png"));
+    if (!out) throw new Error("blob");
+    const url = URL.createObjectURL(out);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `SAUNA道-アバター-${today()}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    toast("アバターを保存しました");
+  } catch (e) {
+    toast("保存できませんでした");
+  }
+}
+
 function renderHome() {
   $("avatar").innerHTML = avatarSvg();
-  $("buddyslot").innerHTML = wataru("");
+  $("buddyslot").innerHTML = wataru("", FRIENDS[0]);
   renderTickets();
+  renderFriends();
+
+  const vis0 = summary().vis;
+  const lv = levelOf(vis0);
+  $("lvl").innerHTML = `<span class="lvt">${lv.cur.t}</span>` +
+    (lv.next ? `<span class="lvn">あと ${lv.next.n - vis0} 回で ${lv.next.t}</span>`
+             : `<span class="lvn">最高位に とうたつ！</span>`);
 
   const owned = ownedCount(), vis = summary().vis;
   if (owned >= ITEMS.length) {
@@ -1728,7 +1896,7 @@ async function addFromCatalog(i) {
   }
   const f = {
     id: uid(), name: c.n, prefecture: c.p, address: c.p + (c.a || ""), phone: "", website: "",
-    price: "", hours: "", rating: 0, subRatings: {}, photos: [], tags: [], memo: "",
+    price: "", temp: "", hours: "", rating: 0, subRatings: {}, photos: [], tags: [], memo: "",
     visits: [], favorite: false, target: true, createdAt: Date.now(), updatedAt: Date.now()
   };
   try { await Store.put(f); } catch (e) { toast("保存できませんでした"); return; }
@@ -1853,6 +2021,7 @@ function openDetail(id) {
         : `<div class="i">${ico("phone")}<span class="v"><span class="k">電話番号</span>
              <a href="https://www.google.com/search?q=${encodeURIComponent(f.name + " " + (f.prefecture || "") + " 電話番号")}" target="_blank" rel="noopener">電話番号をしらべる →</a></span></div>`}
       ${f.hours ? `<div class="i">${ico("clock")}<span class="v"><span class="k">営業時間</span>${esc(f.hours)}</span></div>` : ""}
+      ${f.temp ? `<div class="i">${ico("chart")}<span class="v"><span class="k">サウナ室の温度</span>${esc(f.temp)} ℃</span></div>` : ""}
       <div class="i">${ico("compass")}<span class="v"><span class="k">くわしい情報</span><a href="${ikitaiSearch(f.name)}" target="_blank" rel="noopener">サウナイキタイで見る →</a></span></div>
       ${f.website ? `<div class="i">${ico("globe")}<span class="v"><span class="k">ホームページ</span><a href="${esc(f.website)}" target="_blank" rel="noopener">ページを開く →</a></span></div>` : ""}
       ${f.price ? `<div class="i">${ico("yen")}<span class="v"><span class="k">料金</span>${esc(f.price)} 円</span></div>` : ""}
@@ -1888,6 +2057,7 @@ function openEdit(id, presetPref) {
   $("e-tel").value = editing.phone || "";
   $("e-web").value = editing.website || "";
   $("e-price").value = editing.price || "";
+  $("e-temp").value = editing.temp || "";
   $("e-hours").value = editing.hours || "";
   $("e-tags").value = (editing.tags || []).join(", ");
   $("e-memo").value = editing.memo || "";
@@ -1937,6 +2107,7 @@ async function saveEdit() {
     phone: $("e-tel").value.trim(),
     website: $("e-web").value.trim(),
     price: $("e-price").value.trim(),
+    temp: $("e-temp").value.trim(),
     hours: $("e-hours").value.trim(),
     rating: editing.rating || 0,
     subRatings: editing.subRatings || {},
@@ -2016,6 +2187,7 @@ function itemBurst(item) {
 }
 
 function afterVisit(r) {
+  setTotonoi();
   if (r.got.length) {
     itemBurst(r.got[r.got.length - 1]);
     if (r.newTickets) setTimeout(() => ticketBurst(r.newTickets), 2400);
@@ -2212,6 +2384,7 @@ document.addEventListener("click", async ev => {
 });
 
 $("fab").onclick = () => openEdit(null, filter.pref);
+$("av-save").onclick = saveAvatarImage;
 $("e-save").onclick = saveEdit;
 $("v-save").onclick = saveVisit;
 
