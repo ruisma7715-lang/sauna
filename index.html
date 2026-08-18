@@ -1142,13 +1142,14 @@ function levelOf(vis) {
 
 /* 県を制覇するほど なかまが増える */
 const FRIENDS = [
-  { need:0,  nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" },
-  { need:5,  nm:"ヒロ君",     hair:"#4A3226", shirt:"#3E6B8E", skin:"#F2C6A6" },
-  { need:10, nm:"マナちゃん", hair:"#6B4A2E", shirt:"#E5738F", skin:"#FBD9C0" },
-  { need:20, nm:"ケン君",     hair:"#1D1D24", shirt:"#4E8C5A", skin:"#E7B790" },
-  { need:30, nm:"ユキちゃん", hair:"#8A6A44", shirt:"#C9A227", skin:"#FCE0CB" },
-  { need:47, nm:"サ神さま",   hair:"#F0EDE6", shirt:"#C9A227", skin:"#FBE0C8" }
+  { id:"hiro",   need:0,  nm:"ヒロちゃん", hair:"#3A2A22", shirt:"#E5738F", skin:"#FBD9C0" },
+  { id:"miyo",   need:5,  nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
+  { id:"yuka",   need:10, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
+  { id:"tmp4",   need:20, nm:"（4人目）",  hair:"#1D1D24", shirt:"#4E8C5A", skin:"#E7B790" },
+  { id:"tmp5",   need:30, nm:"（5人目）",  hair:"#5A4238", shirt:"#8B7BC7", skin:"#F2C6A6" },
+  { id:"wataru", need:47, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
 ];
+const WATARU_F = FRIENDS.find(f => f.id === "wataru");
 
 let totonoiUntil = 0;
 function setTotonoi() {
@@ -1615,7 +1616,7 @@ function renderTickets() {
   const rest = TICKET_STEP - (vis % TICKET_STEP);
   $("ticket").innerHTML = `
     <div class="tk">
-      ${wataru("sm")}
+      ${wataru("sm", WATARU_F)}
       <div class="tkb">
         <div class="tkt">ワタル君の無料券</div>
         <div class="tkn"><b>${left}</b> 枚</div>
@@ -2171,7 +2172,7 @@ async function addVisit(id, date, memo) {
 
 function ticketBurst(n) {
   const b = $("burst");
-  $("burst-mark").innerHTML = wataru("sm");
+  $("burst-mark").innerHTML = wataru("sm", WATARU_F);
   $("burst-msg").innerHTML = `ワタル君から<br>無料券を ${n} 枚もらった！`;
   b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
   clearTimeout(b._tm); b._tm = setTimeout(() => b.classList.remove("on"), 2400);
