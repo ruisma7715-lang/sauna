@@ -69,8 +69,24 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:800;margin:0;text-wrap:balance}
   padding:calc(10px + env(safe-area-inset-top)) 2px 14px; letter-spacing:.04em
 }
 /* ---- アバター ---- */
-.avatarcard{background:var(--card);border-radius:24px;padding:16px;box-shadow:var(--sh);margin-top:16px;text-align:center}
+.avatarcard{position:relative;background:var(--card);border-radius:24px;padding:16px;
+  box-shadow:var(--sh);margin-top:16px;text-align:center;overflow:hidden}
 .avatarcard svg.av{width:min(230px,62vw);height:auto;display:block;margin:0 auto}
+/* ---- 動き（動画っぽく）---- */
+.av .chara{transform-box:fill-box;transform-origin:50% 100%;animation:av-bob 3.6s ease-in-out infinite}
+@keyframes av-bob{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-3px) rotate(.8deg)}}
+.av .lid{transform-box:fill-box;transform-origin:center;transform:scaleY(0);animation:av-blink 5.4s infinite}
+@keyframes av-blink{0%,90%,100%{transform:scaleY(0)}92.5%,95%{transform:scaleY(1)}}
+/* ---- 相棒（すみっこで踊る）---- */
+.buddy{position:absolute;right:6px;bottom:4px;width:74px;height:77px}
+.buddy .bd{transform-box:fill-box;transform-origin:50% 100%;animation:bd-bob 2.2s ease-in-out infinite}
+@keyframes bd-bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
+.buddy .eyeb{transform-box:fill-box;transform-origin:center;animation:bd-eye 3.8s ease-in-out infinite}
+@keyframes bd-eye{0%,100%{transform:translate(0,0)}25%{transform:translate(2.5px,-2px)}60%{transform:translate(-2.5px,1.5px)}}
+.buddy .tongue{transform-box:fill-box;transform-origin:50% 0;animation:bd-tongue 1.5s ease-in-out infinite}
+@keyframes bd-tongue{0%,100%{transform:scaleY(.75)}50%{transform:scaleY(1.3)}}
+.buddy .glint{animation:bd-glint 3.4s ease-in-out infinite}
+@keyframes bd-glint{0%,72%,100%{opacity:0}80%,88%{opacity:.9}}
 .nextitem{margin-top:12px}
 .nextitem .nx{font-family:var(--f-disp);font-size:13px;font-weight:800;color:var(--sakura-d);margin-bottom:7px}
 .nextitem .nx b{font-size:19px}
@@ -555,6 +571,24 @@ nav button.on .icon{stroke-width:2.3}
 
     <div class="avatarcard">
       <div id="avatar"></div>
+      <svg class="buddy" viewBox="0 0 100 104" aria-label="相棒" role="img">
+        <g class="bd">
+          <path d="M22 52c0-17 12-30 28-30s28 13 28 30v18c0 5-3 8-8 8H30c-5 0-8-3-8-8z" fill="#241C1A"/>
+          <path d="M27 104c0-13 10-23 23-23s23 10 23 23z" fill="#1E1E22"/>
+          <ellipse cx="50" cy="53" rx="23" ry="24" fill="#F7D4B8"/>
+          <path d="M44 65q6 9 12 0z" fill="#7C3542"/>
+          <ellipse class="tongue" cx="50" cy="68" rx="4.6" ry="3.4" fill="#E9697F"/>
+          <path d="M26 52a24 24 0 0 1 48 0q-6-12-12-9-6 2-12 2t-12-2q-6-3-12 9z" fill="#241C1A"/>
+          <path d="M47 50h6" stroke="#15100F" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="38" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
+          <circle cx="62" cy="50" r="11" fill="#FFFBF4" stroke="#15100F" stroke-width="4"/>
+          <circle class="eyeb" cx="38" cy="47" r="3.3" fill="#241710"/>
+          <circle class="eyeb" cx="62" cy="47" r="3.3" fill="#241710"/>
+          <g class="glint" fill="#ffffff" opacity="0">
+            <path d="M31 45l6-5 3 4-6 5z"/><path d="M55 45l6-5 3 4-6 5z"/>
+          </g>
+        </g>
+      </svg>
       <div class="nextitem">
         <div class="nx" id="nx-msg"></div>
         <div class="track"><i id="nx-bar" style="width:0%"></i></div>
@@ -934,13 +968,41 @@ const BADGES = [
 /* ============ アバターと あつめるアイテム ============ */
 const ITEM_STEP = 3;                 // スタンプ3個で1アイテム
 const AV_BASE = `
-  <path d="M62 178c0-25 17-44 38-44s38 19 38 44z" fill="#FFF7F3" stroke="#EFDCD7" stroke-width="3"/>
-  <circle cx="64" cy="99" r="7.5" fill="#FFD0B6"/><circle cx="136" cy="99" r="7.5" fill="#FFD0B6"/>
-  <circle cx="100" cy="97" r="36" fill="#FFDCC6"/>
-  <path d="M85 94q5-7 10 0M105 94q5-7 10 0" stroke="#7A5751" stroke-width="4.2" stroke-linecap="round" fill="none"/>
-  <ellipse cx="79" cy="108" rx="7.5" ry="5" fill="#FFAFC5" opacity=".8"/>
-  <ellipse cx="121" cy="108" rx="7.5" ry="5" fill="#FFAFC5" opacity=".8"/>
-  <path d="M95 112q5 6 10 0" stroke="#7A5751" stroke-width="3.4" stroke-linecap="round" fill="none"/>`;
+  <path d="M56 100c0-28 20-49 44-49s44 21 44 49v30c0 7-5 12-12 12H68c-7 0-12-5-12-12z" fill="#4A3730"/>
+  <rect x="92" y="124" width="16" height="17" rx="6" fill="#F3C9B2"/>
+  <path d="M58 184c0-27 19-46 42-46s42 19 42 46z" fill="#26262B"/>
+  <path d="M68 146q32 20 64 0 5 10 4 19-36 18-72 0-1-9 4-19z" fill="#1A1A1F"/>
+  <path d="M89 152v20M111 152v20" stroke="#F2EFEA" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M76 178h48" stroke="#34343B" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="60" cy="177" r="8" fill="#FFDFCB"/>
+  <circle cx="140" cy="177" r="8" fill="#FFDFCB"/>
+  <ellipse cx="100" cy="98" rx="36" ry="37" fill="#FFDFCB"/>
+  <circle cx="65" cy="104" r="7" fill="#FBD0B8"/>
+  <circle cx="135" cy="104" r="7" fill="#FBD0B8"/>
+  <ellipse cx="86" cy="103" rx="9.2" ry="10.6" fill="#ffffff"/>
+  <ellipse cx="114" cy="103" rx="9.2" ry="10.6" fill="#ffffff"/>
+  <circle cx="86.5" cy="104" r="7.6" fill="#4B3020"/>
+  <circle cx="114.5" cy="104" r="7.6" fill="#4B3020"/>
+  <circle cx="86.5" cy="104" r="3.4" fill="#241710"/>
+  <circle cx="114.5" cy="104" r="3.4" fill="#241710"/>
+  <circle cx="89.6" cy="100.4" r="2.9" fill="#ffffff"/>
+  <circle cx="117.6" cy="100.4" r="2.9" fill="#ffffff"/>
+  <circle cx="83" cy="107" r="1.7" fill="#ffffff" opacity=".75"/>
+  <circle cx="111" cy="107" r="1.7" fill="#ffffff" opacity=".75"/>
+  <path d="M77 96q9-6 18-1M105 95q9-5 18 1" fill="none" stroke="#3A2620" stroke-width="3" stroke-linecap="round"/>
+  <ellipse class="lid" cx="86" cy="103" rx="9.6" ry="11" fill="#FFDFCB"/>
+  <ellipse class="lid" cx="114" cy="103" rx="9.6" ry="11" fill="#FFDFCB"/>
+  <ellipse cx="76" cy="116" rx="7.5" ry="5" fill="#FF9FB4" opacity=".5"/>
+  <ellipse cx="124" cy="116" rx="7.5" ry="5" fill="#FF9FB4" opacity=".5"/>
+  <path d="M98.6 112q1.6 1.6 3.2 0" fill="none" stroke="#E3AE93" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="100" cy="121" rx="6.4" ry="7.4" fill="#E7708A"/>
+  <path d="M94.6 119.5q5.4-3.6 10.8 0" fill="none" stroke="#C85570" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M62 99a38 38 0 0 1 76 0q-8-14-18-11-10 3-20 3t-20-3q-10-3-18 11z" fill="#4A3730"/>
+  <path d="M56 100v30q0 8 8 11 4-26 3-45z" fill="#3F2E29"/>
+  <path d="M144 100v30q0 8-8 11-4-26-3-45z" fill="#3F2E29"/>
+  <path d="M63 105q1-26 14-35 4 2 3 8-10 11-11 29z" fill="#DFC392"/>
+  <path d="M137 105q-1-26-14-35-4 2-3 8 10 11 11 29z" fill="#DFC392"/>
+  <path d="M120 92q3-12 11-16l3 6q-7 5-9 13z" fill="#DFC392"/>`;
 
 const ITEMS = [
   { id:"hat", nm:"サウナハット", slot:"head", vb:"52 30 96 62", svg:`
@@ -1013,12 +1075,14 @@ function avatarSvg() {
     <g clip-path="url(#avclip)">
       <rect width="200" height="200" fill="url(#avbg)"/>
       ${bg ? bg.svg : ""}
-      ${seat ? seat.svg : ""}
-      ${AV_BASE}
-      ${neck ? neck.svg : ""}
-      ${head ? head.svg : ""}
-      ${face ? face.svg : ""}
-      ${hand ? hand.svg : ""}
+      <g class="chara">
+        ${seat ? seat.svg : ""}
+        ${AV_BASE}
+        ${neck ? neck.svg : ""}
+        ${head ? head.svg : ""}
+        ${face ? face.svg : ""}
+        ${hand ? hand.svg : ""}
+      </g>
     </g>
   </svg>`;
 }
