@@ -1,5 +1,5 @@
 /* 圏外でもアプリが開くようにファイルを控えておく */
-const CACHE = "sauna-tabi-v12";
+const CACHE = "sauna-tabi-v13";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
