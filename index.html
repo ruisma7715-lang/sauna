@@ -1143,10 +1143,10 @@ function levelOf(vis) {
 /* 県を制覇するほど なかまが増える */
 /* need は「行った施設の数」 */
 const FRIENDS = [
-  { id:"hiro",   need:0,  nm:"ヒロちゃん", hair:"#3A2A22", shirt:"#E5738F", skin:"#FBD9C0" },
-  { id:"miyo",   need:10, nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
-  { id:"yuka",   need:30, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
-  { id:"wataru", need:60, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
+  { id:"hiro",   need:10, nm:"ヒロちゃん", hair:"#3A2A22", shirt:"#E5738F", skin:"#FBD9C0" },
+  { id:"miyo",   need:15, nm:"みよちゃん", hair:"#6B4A2E", shirt:"#4FA3C7", skin:"#F7D4B8" },
+  { id:"yuka",   need:20, nm:"ゆかちゃん", hair:"#8A6A44", shirt:"#E9A94F", skin:"#FCE0CB" },
+  { id:"wataru", need:30, nm:"ワタル君",   hair:"#241C1A", shirt:"#1E1E22", skin:"#F7D4B8" }
 ];
 const WATARU_F = FRIENDS.find(f => f.id === "wataru");
 
@@ -1669,7 +1669,9 @@ async function saveAvatarImage() {
 
 function renderHome() {
   $("avatar").innerHTML = avatarSvg();
-  $("buddyslot").innerHTML = wataru("", FRIENDS[0]);
+  /* すみっこには いま解放されている いちばん新しい なかまを出す */
+  const un = FRIENDS.filter(f => summary().fac >= f.need);
+  $("buddyslot").innerHTML = un.length ? wataru("", un[un.length - 1]) : "";
   renderTickets();
   renderFriends();
 
